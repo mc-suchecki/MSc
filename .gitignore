@@ -87,3 +87,10 @@ ENV/
 
 # Rope project settings
 .ropeproject
+
+# do not commit API key and secret
+api_key.txt
+secret.txt
+
+# PyCharm
+.idea
