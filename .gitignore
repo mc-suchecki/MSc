@@ -90,7 +90,7 @@ ENV/
 
 # do not commit API key and secret
 api_key.txt
-secret.txt
+api_secret.txt
 
 # PyCharm
 .idea
