@@ -1,13 +1,11 @@
 import datetime
-import os
-
 import flickrapi
+import os
 import requests
 
 # must have
-# TODO save results in a file
 # TODO what to do about the aspect ratio?
-# TODO add multi threading to increase download speed
+# TODO add multi-threading to increase download speed
 
 # maybe
 # TODO think about different size
@@ -33,8 +31,7 @@ with open('api_secret.txt') as file:
 # connect to Flickr
 flickr = flickrapi.FlickrAPI(api_key, api_secret)
 
-# Flickr returns only 4000 unique results, so we need to do multiple queries
-# to make the results more random, we select random months and download the pictures
+# Flickr returns only 4000 unique results, so we need to do multiple queries, here we go by month
 min_upload_date = datetime.datetime(2012, 1, 1)
 while min_upload_date <= datetime.datetime.now():
     # TODO improve this line (jump by month, not 30 days)
@@ -63,10 +60,15 @@ while min_upload_date <= datetime.datetime.now():
         stars = fav_result['photo']['total']
         views = photo['views']
 
+        # download the photo
         print('Downloading from ' + url + '... (' + stars + ' stars, ' + views + ' views)')
-        with open(file_name, 'wb') as file:
+        with open(file_name, 'wb') as photo_file:
             response = requests.get(url)
-            file.write(response.content)
+            photo_file.write(response.content)
+
+        # save the photo ID to a list along with number of stars and views
+        with open(DOWNLOAD_LOCATION + 'list.txt', "a") as list_file:
+            list_file.write(photo_id + ',' + stars + ',' + views + '\n')
 
     # TODO improve this line (jump by month, not 30 days)
     min_upload_date = min_upload_date + datetime.timedelta(days=30)
