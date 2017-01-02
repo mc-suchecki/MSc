@@ -1,15 +1,15 @@
 from dateutil.relativedelta import relativedelta
 from multiprocessing import Pool
+from PIL import Image
 import datetime
 import flickrapi
 import os
 import requests
 
-# TODOs
-# must have
+# 'must have' TODOs
 # TODO what to do about the aspect ratio?
 
-# maybe
+# 'maybe' TODOs
 # TODO think about different size
 # TODO better way to avoid pictures not being photos
 
@@ -56,19 +56,18 @@ def save_flickr_photo_to_disk(photo_info):
 		print('Skipping ' + file_name + '... (already downloaded)')
 		return
 
-	url = get_flickr_photo_url(photo_info['farm'], photo_info['server'], photo_id, photo_info['secret'])
-
-	# download number of stars and get number of views
-	favorites = get_photo_favorites(photo_id)
-	views = photo_info['views']
-
 	# download the photo
-	print('Downloading from ' + url + '... (' + favorites + ' stars, ' + views + ' views)')
+	url = get_flickr_photo_url(photo_info['farm'], photo_info['server'], photo_id, photo_info['secret'])
+	print('Downloading from ' + url + '...')
 	download_flickr_photo(file_name, url)
 
-	# save the photo ID to a list along with number of stars and views
+	# save the photo ID to a list along with additional data
+	favorites = get_photo_favorites(photo_id)
+	views = photo_info['views']
+	with Image.open(file_name) as photo_file:
+		width, height = photo_file.size
 	with open(DOWNLOAD_LOCATION + 'list.txt', "a") as list_file:
-		list_file.write(photo_id + ',' + favorites + ',' + views + '\n')
+		list_file.write(','.join([photo_id, favorites, str(views), str(width), str(height)]) + '\n')
 
 
 #################################### THE SCRIPT ######################################
