@@ -94,3 +94,6 @@ api_secret.txt
 
 # PyCharm
 .idea
+
+# downloaded photos
+data/
