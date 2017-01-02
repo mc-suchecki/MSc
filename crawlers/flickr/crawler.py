@@ -1,4 +1,5 @@
 from dateutil.relativedelta import relativedelta
+from multiprocessing import Pool
 import datetime
 import flickrapi
 import os
@@ -7,7 +8,6 @@ import requests
 # TODOs
 # must have
 # TODO what to do about the aspect ratio?
-# TODO add multi-threading to increase download speed
 
 # maybe
 # TODO think about different size
@@ -15,7 +15,8 @@ import requests
 
 # settings
 # DOWNLOAD_LOCATION = '/home/p307k07/Code/MSc/MSc/data/'        # laboratory
-DOWNLOAD_LOCATION = '/home/mc/Code/Python/MSc/data/'  					# ThinkPad
+DOWNLOAD_LOCATION = '/home/mc/Code/Python/MSc/data/'  # ThinkPad
+POOL_SIZE = 20  # number of subprocesses to spawn while downloading photos
 PAGE_SIZE = 500  # Flickr allows maximum 500 photos per page
 TAGS = ','.join(['landscape', 'portrait', 'architecture', 'macro', 'street', 'travel', 'nature', 'wildlife', 'night',
 								 'blackandwhite'])  # we limit the results to only these tags to avoid documents etc
@@ -29,9 +30,16 @@ def get_flickr_photo_url(farm_id, server_id, photo_id, secret):
 
 
 def download_flickr_photo(photo_file_name, photo_url):
-	with open(photo_file_name, 'wb') as photo_file:
-		response = requests.get(photo_url)
-		photo_file.write(response.content)
+	while True:
+		try:
+			response = requests.get(photo_url)
+			with open(photo_file_name, 'wb') as photo_file:
+				photo_file.write(response.content)
+		except requests.exceptions.ConnectionError:
+			print('Downloading from ' + photo_url + ' failed!')
+			print('Retrying...')
+			continue
+		break
 
 
 def get_photo_favorites(id):
@@ -39,7 +47,31 @@ def get_photo_favorites(id):
 	return fav_result['photo']['total']
 
 
-# THE SCRIPT
+def save_flickr_photo_to_disk(photo_info):
+	photo_id = photo_info['id']
+	file_name = DOWNLOAD_LOCATION + str(photo_id) + '.jpg'
+
+	# check if photo was already downloaded
+	if os.path.isfile(file_name):
+		print('Skipping ' + file_name + '... (already downloaded)')
+		return
+
+	url = get_flickr_photo_url(photo_info['farm'], photo_info['server'], photo_id, photo_info['secret'])
+
+	# download number of stars and get number of views
+	favorites = get_photo_favorites(photo_id)
+	views = photo_info['views']
+
+	# download the photo
+	print('Downloading from ' + url + '... (' + favorites + ' stars, ' + views + ' views)')
+	download_flickr_photo(file_name, url)
+
+	# save the photo ID to a list along with number of stars and views
+	with open(DOWNLOAD_LOCATION + 'list.txt', "a") as list_file:
+		list_file.write(photo_id + ',' + favorites + ',' + views + '\n')
+
+
+#################################### THE SCRIPT ######################################
 
 # read API key and secret
 with open('api_key.txt') as file:
@@ -51,36 +83,19 @@ with open('api_secret.txt') as file:
 flickr = flickrapi.FlickrAPI(api_key, api_secret)
 
 # Flickr returns only 4000 unique results, so we need to do multiple queries, here we go by month
-min_upload_date = datetime.datetime(2012, 1, 1)
+min_upload_date = datetime.datetime(2012, 5, 1)
 while min_upload_date <= datetime.datetime.now():
 	max_upload_date = min_upload_date + relativedelta(months=1)
 	result = flickr.photos.search(api_key=api_key, min_upload_date=min_upload_date, max_upload_date=max_upload_date,
 																media='photos', content_type=1, tags=TAGS, per_page=PAGE_SIZE, tag_mode='any',
 																extras=EXTRAS, format='parsed-json')
 
-	print('Downloading ' + str(len(result['photos']['photo'])) + ' photos from ' + min_upload_date.strftime('%m/%Y') + '...')
-	for photo in result['photos']['photo']:
-		photo_id = photo['id']
-		file_name = DOWNLOAD_LOCATION + str(photo_id) + '.jpg'
+	number_of_photos = len(result['photos']['photo'])
+	print('Downloading ' + str(number_of_photos) + ' photos from ' + min_upload_date.strftime('%m/%Y') + '...')
 
-		# check if photo was already downloaded
-		if os.path.isfile(file_name):
-			print('Skipping ' + file_name + '... (already downloaded)')
-			continue
-
-		url = get_flickr_photo_url(photo['farm'], photo['server'], photo_id, photo['secret'])
-
-		# download number of stars and get number of views
-		favorites = get_photo_favorites(photo_id)
-		views = photo['views']
-
-		# download the photo
-		print('Downloading from ' + url + '... (' + favorites + ' stars, ' + views + ' views)')
-		download_flickr_photo(file_name, url)
-
-		# save the photo ID to a list along with number of stars and views
-		with open(DOWNLOAD_LOCATION + 'list.txt', "a") as list_file:
-			list_file.write(photo_id + ',' + favorites + ',' + views + '\n')
+	# open a subprocess for every photo to speed up downloading
+	with Pool(POOL_SIZE) as pool:
+		pool.map(save_flickr_photo_to_disk, result['photos']['photo'])
 
 	# go to the next month
 	min_upload_date = min_upload_date + relativedelta(months=1)
