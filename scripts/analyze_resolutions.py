@@ -1,10 +1,11 @@
+"""Displays a resolution breakdown - how many photos have a given resolution."""
 from PIL import Image
 from sortedcontainers import SortedDict
 import os
 import pylab
 
 # settings
-DIRECTORY = './data/'
+DIRECTORY = '../data/'
 VALID_EXTENSIONS = ('.JPG', '.jpg', '.jpeg')
 THRESHOLD = 100
 
@@ -25,7 +26,7 @@ for subdir, dirs, files in os.walk(DIRECTORY):
   for file in files:
     if is_photo(file):
       width, height = get_photo_dimensions(file)
-      # round the numbers to 10s
+      # round the numbers to nearest 20s (we will crop the photos to have more for training)
       width = int(pylab.math.ceil(width / 20.0)) * 20
       height = int(pylab.math.ceil(height / 20.0)) * 20
       resolution_string = str(width) + 'x' + str(height)

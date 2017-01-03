@@ -16,8 +16,7 @@ import time
 # TODO better way to avoid pictures not being photos
 
 # settings
-# DOWNLOAD_LOCATION = '/home/p307k07/Code/MSc/MSc/data/'        # laboratory
-DOWNLOAD_LOCATION = '/home/mc/Code/Python/MSc/data/'  # ThinkPad
+DOWNLOAD_LOCATION = '../data/'
 POOL_SIZE = 20  # number of subprocesses to spawn while downloading photos
 PAGE_SIZE = 500  # Flickr allows maximum 500 photos per page
 TAGS = ','.join(['landscape', 'portrait', 'architecture', 'macro', 'street', 'travel', 'nature', 'wildlife', 'night',
@@ -26,7 +25,7 @@ EXTRAS = ','.join(['views'])  # download also number of views
 PHOTO_SIZE = 'm'  # resolution of the photos - 'm' means small, 240 on longest side
 
 
-# functions
+# helpers
 def get_flickr_photo_url(farm_id, server_id, photo_id, secret):
   return 'https://farm{}.staticflickr.com/{}/{}_{}_{}.jpg'.format(farm_id, server_id, photo_id, secret, PHOTO_SIZE)
 
