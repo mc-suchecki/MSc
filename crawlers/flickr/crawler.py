@@ -1,3 +1,4 @@
+"""Downloads all of the public photographs from Flickr."""
 from dateutil.relativedelta import relativedelta
 from multiprocessing import Pool
 from PIL import Image
@@ -93,7 +94,7 @@ with open('api_secret.txt') as file:
 flickr = flickrapi.FlickrAPI(api_key, api_secret)
 
 # Flickr returns only 4000 unique results, so we need to do multiple queries, here we go iterating by month
-min_upload_date = datetime.datetime(2012, 11, 1)
+min_upload_date = datetime.datetime(2000, 1, 1)
 while min_upload_date <= datetime.datetime.now():
   max_upload_date = min_upload_date + relativedelta(months=1)
   result = flickr.photos.search(api_key=api_key, min_upload_date=min_upload_date, max_upload_date=max_upload_date,
