@@ -71,8 +71,15 @@ def main(_):
   cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(y, y_))
   train_step = tf.train.GradientDescentOptimizer(0.5).minimize(cross_entropy)
 
-  # do the training
+  # initialize session
   sess = tf.InteractiveSession()
+
+  # initialize TensorBoard
+  tf.summary.image('Input images', x)
+  summaries = tf.summary.merge_all()
+  train_writer = tf.summary.FileWriter('/tmp/tf', sess.graph)
+
+  # do the training
   tf.initialize_all_variables().run()
   coord = tf.train.Coordinator()
   threads = tf.train.start_queue_runners(coord=coord)
@@ -80,6 +87,7 @@ def main(_):
     print('Loading next ' + str(BATCH_SIZE) + ' photos...')
     print('Training batch ' + str(i) + '/' + str(TRAINING_SET_SIZE // BATCH_SIZE) + '...')
     sess.run(train_step)
+    sess.run(summaries)
 
   # test trained model
   print('Done! The whole training took ' + str((datetime.datetime.now() - start_time).seconds) + ' seconds.')
@@ -93,6 +101,7 @@ def main(_):
   # stop our queue threads and properly close the session
   coord.request_stop()
   coord.join(threads)
+  train_writer.close()
   sess.close()
 
 
