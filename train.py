@@ -2,6 +2,15 @@
 import datetime
 import tensorflow as tf
 
+# TODO move loading of the dataset to a separate file
+# TODO take batch size as a parameter
+# TODO read set sizes from list files
+# TODO re-think the computation graph and add namespaces
+# TODO improve evaluation on the validation set - so far we only evaluate on 100 images
+# TODO evaluate the model on the test set at the end
+# TODO find a way to plot accuracy on the training set also?
+# TODO save the model after training and write a script to process a given photo
+
 # we select horizontal photos with 4:3 aspect ratio as the most common type
 IMAGE_WIDTH = 240
 IMAGE_HEIGHT = 180
@@ -13,13 +22,10 @@ VALIDATION_IMAGES_DIR = SOURCE_DIR + 'validation/'
 TEST_IMAGES_DIR = SOURCE_DIR + 'test/'
 LIST_FILE_NAME = 'list.txt'
 BATCH_SIZE = 100
-NUMBER_OF_EPOCHS = 1                                      # TODO check this
-TRAINING_SET_SIZE = 15873                                 # TODO read this from file?
+TRAINING_SET_SIZE = 15873
 
 
-# TODO take batch size as a parameter
 def create_photo_and_label_batches(source_directory):
-  """TODO comment, split and throw to another file."""
   # read the list of photo IDs and labels
   photos_list = open(source_directory + LIST_FILE_NAME, 'r')
   filenames_list = []
@@ -27,7 +33,7 @@ def create_photo_and_label_batches(source_directory):
   # get lists of photo file names and labels
   for line in photos_list:
     filenames_list.append(source_directory + line.split(',')[0] + '.jpg')
-    # so far the naive approach is to asses an photo as aesthetically pleasing if it has at least one star
+    # so far the naive approach is to assess an photo as aesthetically pleasing if it has at least one star
     labels_list.append([bool(int(line.split(',')[1]))])        # TODO improve the assignment of the classes
   # convert the lists to tensors
   filenames = tf.convert_to_tensor(filenames_list, dtype=tf.string)
@@ -98,8 +104,6 @@ def main(_):
 
   # test trained model
   print('Done! The whole training took ' + str((datetime.datetime.now() - start_time).seconds) + ' seconds.')
-
-  # TODO evaluate the model on the test set
 
   # stop our queue threads and properly close the session
   coord.request_stop()
