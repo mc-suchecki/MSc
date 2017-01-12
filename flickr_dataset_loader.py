@@ -1,6 +1,8 @@
 import tensorflow as tf
 from tensorflow.python.framework import ops
 
+# TODO make loader load the whole data set in one batch if batch size is not specified
+
 
 class FlickrDatasetLoader(object):
   """ A class loading the photos from Flickr along with the associated labels. """
@@ -33,21 +35,21 @@ class FlickrDatasetLoader(object):
     self.validation_set_size = 0
     self.test_set_size = 0
 
-  def create_training_batch(self, batch_size: int):
+  def create_training_batch(self, batch_size: int = None):
     """ Creates batch of photos and corresponding labels from the training set. """
     training_batch, training_set_size = self._create_photo_and_label_batches(self.TRAINING_IMAGES_DIR, batch_size)
     # save the size of the loaded dataset
     self.training_set_size = training_set_size
     return training_batch
 
-  def create_validation_batch(self, batch_size: int):
+  def create_validation_batch(self, batch_size: int = None):
     """ Creates batch of photos and corresponding labels from the cross validation set. """
     validation_batch, validation_set_size = self._create_photo_and_label_batches(self.VALIDATION_IMAGES_DIR, batch_size)
     # save the size of the loaded dataset
     self.validation_set_size = validation_set_size
     return validation_batch
 
-  def create_test_batch(self, batch_size: int):
+  def create_test_batch(self, batch_size: int = None):
     """ Creates batch of photos and corresponding labels from the training set. """
     test_batch, test_set_size = self._create_photo_and_label_batches(self.TEST_IMAGES_DIR, batch_size)
     # save the size of the loaded dataset
@@ -55,6 +57,7 @@ class FlickrDatasetLoader(object):
     return test_batch
 
   def _create_photo_and_label_batches(self, source_directory: str, batch_size: int):
+    # TODO split this file into smaller functions
     # read the list of photo IDs and labels
     photos_list = open(source_directory + self.LIST_FILE_NAME, 'r')
     filenames_list = []
@@ -64,6 +67,9 @@ class FlickrDatasetLoader(object):
       filenames_list.append(source_directory + line.split(',')[0] + '.jpg')
       # so far the naive approach is to assess an photo as aesthetically pleasing if it has at least one star
       labels_list.append([bool(int(line.split(',')[1]))])  # TODO improve the assignment of the classes
+    # set batch size to the whole dataset if batch size is not provided
+    if batch_size is None:
+      batch_size = len(filenames_list)
     # convert the lists to tensors
     filenames = tf.convert_to_tensor(filenames_list, dtype=tf.string)
     labels = tf.convert_to_tensor(labels_list, dtype=tf.bool)

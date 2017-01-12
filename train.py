@@ -11,11 +11,12 @@ from flickr_dataset_loader import FlickrDatasetLoader
 
 # batch sizes - we split the training set into minibatches and take both validation and test sets as whole batch
 TRAINING_BATCH_SIZE = 100
-VALIDATION_BATCH_SIZE = 2612
-TEST_BATCH_SIZE = 2707
 
 # TensorBoard configuration
 TENSOR_BOARD_DIR = os.path.join('.', 'tmp')
+TRAINING_SUMMARY_DIR = './tmp/train'
+VALIDATION_SUMMARY_DIR = './tmp/validation'
+TEST_SUMMARY_DIR = './tmp/test'
 
 
 def main(_):
@@ -30,8 +31,8 @@ def main(_):
   # load the datasets
   flickr_dataset_loader = FlickrDatasetLoader()
   training_photo_batch, training_label_batch = flickr_dataset_loader.create_training_batch(TRAINING_BATCH_SIZE)
-  validation_photo_batch, validation_label_batch = flickr_dataset_loader.create_validation_batch(VALIDATION_BATCH_SIZE)
-  test_photo_batch, test_label_batch = flickr_dataset_loader.create_test_batch(TEST_BATCH_SIZE)
+  validation_photo_batch, validation_label_batch = flickr_dataset_loader.create_validation_batch()
+  test_photo_batch, test_label_batch = flickr_dataset_loader.create_test_batch()
 
   # create the model
   x = training_photo_batch  # input tensor (so far flattened)
@@ -42,7 +43,7 @@ def main(_):
 
   # training
   cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(y, y_))
-  train_step = tf.train.GradientDescentOptimizer(0.5).minimize(cross_entropy)
+  train_step = tf.train.AdamOptimizer().minimize(cross_entropy)
 
   # evaluating on training set
   training_correct_prediction = tf.equal(tf.cast(tf.round(y), tf.bool), training_label_batch)
@@ -68,17 +69,16 @@ def main(_):
     training_accuracy_summary = tf.summary.scalar('Accuracy on the training set', training_accuracy)
     validation_accuracy_summary = tf.summary.scalar('Accuracy on the cross validation set', validation_accuracy)
     test_accuracy_summary = tf.summary.scalar('Accuracy on the test set', test_accuracy)
-  summaries = tf.summary.merge_all()
-  training_writer = tf.summary.FileWriter('./tmp/train', sess.graph)
-  validation_writer = tf.summary.FileWriter('./tmp/validation', sess.graph)
-  test_writer = tf.summary.FileWriter('./tmp/test', sess.graph)
+  training_writer = tf.summary.FileWriter(TRAINING_SUMMARY_DIR, sess.graph)
+  validation_writer = tf.summary.FileWriter(VALIDATION_SUMMARY_DIR, sess.graph)
+  test_writer = tf.summary.FileWriter(TEST_SUMMARY_DIR, sess.graph)
 
   # do the training
-  tf.initialize_all_variables().run()
+  tf.global_variables_initializer().run()
   coord = tf.train.Coordinator()
   threads = tf.train.start_queue_runners(coord=coord)
   number_of_batches = flickr_dataset_loader.get_training_set_size() // TRAINING_BATCH_SIZE
-  for i in range(number_of_batches):
+  for i in range(1, number_of_batches):
     print('Training with batch {}/{} (containing {} photos)...'.format(i, number_of_batches, TRAINING_BATCH_SIZE))
     training_accuracy_result, _ = sess.run([training_accuracy_summary, train_step])
     training_writer.add_summary(training_accuracy_result, i)
@@ -86,8 +86,8 @@ def main(_):
     validation_accuracy_result = sess.run(validation_accuracy_summary)
     validation_writer.add_summary(validation_accuracy_result, i)
 
-  # test trained model
-  print('Done! The whole training took ' + str((datetime.datetime.now() - start_time).seconds) + ' seconds.')
+  # compute accuracy of the trained model on test set
+  print('Done! The whole training took {} seconds.'.format((datetime.datetime.now() - start_time).seconds))
   test_accuracy_result = sess.run(test_accuracy_summary)
   test_writer.add_summary(test_accuracy_result)
 
