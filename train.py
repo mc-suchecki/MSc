@@ -5,12 +5,14 @@ import tensorflow as tf
 
 from flickr_dataset_loader import FlickrDatasetLoader
 
+# TODO use placeholders for list of filenames in order to not duplicate the model code 3 times
 # TODO re-think the computation graph and add namespaces
 # TODO save the model after training and write a script to process a given photo
 # TODO add convolution layers and test bigger models
 
-# batch sizes - we split the training set into minibatches and take both validation and test sets as whole batch
+# training parameters
 TRAINING_BATCH_SIZE = 100
+TRAINING_ITERATIONS_LIMIT = 10
 
 # TensorBoard configuration
 TENSOR_BOARD_DIR = os.path.join('.', 'tmp')
@@ -78,8 +80,8 @@ def main(_):
   coord = tf.train.Coordinator()
   threads = tf.train.start_queue_runners(coord=coord)
   number_of_batches = flickr_dataset_loader.get_training_set_size() // TRAINING_BATCH_SIZE
-  for i in range(1, number_of_batches):
-    print('Training with batch {}/{} (containing {} photos)...'.format(i, number_of_batches, TRAINING_BATCH_SIZE))
+  for i in range(min(number_of_batches, TRAINING_ITERATIONS_LIMIT)):
+    print('Training with batch {}/{} (containing {} photos)...'.format(i + 1, number_of_batches, TRAINING_BATCH_SIZE))
     training_accuracy_result, _ = sess.run([training_accuracy_summary, train_step])
     training_writer.add_summary(training_accuracy_result, i)
     print('Evaluating the model on validation set...')
