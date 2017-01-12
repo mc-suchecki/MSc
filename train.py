@@ -6,22 +6,20 @@ import tensorflow as tf
 from flickr_dataset_loader import FlickrDatasetLoader
 
 # TODO re-think the computation graph and add namespaces
-# TODO improve evaluation on the validation set - so far we only evaluate on 100 images
-# TODO evaluate the model on the test set at the end
-# TODO find a way to plot accuracy on the training set also?
 # TODO save the model after training and write a script to process a given photo
+# TODO add convolution layers and test bigger models
 
-# batch sizes
+# batch sizes - we split the training set into minibatches and take both validation and test sets as whole batch
 TRAINING_BATCH_SIZE = 100
-VALIDATION_BATCH_SIZE = 100
-TEST_BATCH_SIZE = 100
+VALIDATION_BATCH_SIZE = 2612
+TEST_BATCH_SIZE = 2707
 
 # TensorBoard configuration
 TENSOR_BOARD_DIR = os.path.join('.', 'tmp')
 
 
 def main(_):
-  # clean TENSOR_BOARD_DIR
+  # clean TensorBoard data directory
   if tf.gfile.Exists(TENSOR_BOARD_DIR):
     tf.gfile.DeleteRecursively(TENSOR_BOARD_DIR)
   tf.gfile.MakeDirs(TENSOR_BOARD_DIR)
@@ -33,7 +31,7 @@ def main(_):
   flickr_dataset_loader = FlickrDatasetLoader()
   training_photo_batch, training_label_batch = flickr_dataset_loader.create_training_batch(TRAINING_BATCH_SIZE)
   validation_photo_batch, validation_label_batch = flickr_dataset_loader.create_validation_batch(VALIDATION_BATCH_SIZE)
-  # test_photo_batch, test_label_batch = flickr_dataset_loader.create_test_batch(TEST_BATCH_SIZE)
+  test_photo_batch, test_label_batch = flickr_dataset_loader.create_test_batch(TEST_BATCH_SIZE)
 
   # create the model
   x = training_photo_batch  # input tensor (so far flattened)
@@ -46,10 +44,19 @@ def main(_):
   cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(y, y_))
   train_step = tf.train.GradientDescentOptimizer(0.5).minimize(cross_entropy)
 
-  # evaluating
+  # evaluating on training set
+  training_correct_prediction = tf.equal(tf.cast(tf.round(y), tf.bool), training_label_batch)
+  training_accuracy = tf.reduce_mean(tf.cast(training_correct_prediction, tf.float32))
+
+  # evaluating on validation set
   y_validation = tf.sigmoid(tf.matmul(validation_photo_batch, w) + b)
-  correct_prediction = tf.equal(tf.cast(tf.round(y_validation), tf.bool), validation_label_batch)
-  validation_accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+  validation_correct_prediction = tf.equal(tf.cast(tf.round(y_validation), tf.bool), validation_label_batch)
+  validation_accuracy = tf.reduce_mean(tf.cast(validation_correct_prediction, tf.float32))
+
+  # evaluating on test set
+  y_test = tf.sigmoid(tf.matmul(test_photo_batch, w) + b)
+  test_correct_prediction = tf.equal(tf.cast(tf.round(y_test), tf.bool), test_label_batch)
+  test_accuracy = tf.reduce_mean(tf.cast(test_correct_prediction, tf.float32))
 
   # initialize session
   sess = tf.InteractiveSession()
@@ -58,10 +65,13 @@ def main(_):
   # with tf.name_scope('input'):
   #   tf.summary.image('images', x, 20)
   with tf.name_scope('evaluation'):
-    tf.summary.scalar('accuracy', validation_accuracy)
+    training_accuracy_summary = tf.summary.scalar('Accuracy on the training set', training_accuracy)
+    validation_accuracy_summary = tf.summary.scalar('Accuracy on the cross validation set', validation_accuracy)
+    test_accuracy_summary = tf.summary.scalar('Accuracy on the test set', test_accuracy)
   summaries = tf.summary.merge_all()
-  train_writer = tf.summary.FileWriter('./tmp/train', sess.graph)
+  training_writer = tf.summary.FileWriter('./tmp/train', sess.graph)
   validation_writer = tf.summary.FileWriter('./tmp/validation', sess.graph)
+  test_writer = tf.summary.FileWriter('./tmp/test', sess.graph)
 
   # do the training
   tf.initialize_all_variables().run()
@@ -70,21 +80,23 @@ def main(_):
   number_of_batches = flickr_dataset_loader.get_training_set_size() // TRAINING_BATCH_SIZE
   for i in range(number_of_batches):
     print('Training with batch {}/{} (containing {} photos)...'.format(i, number_of_batches, TRAINING_BATCH_SIZE))
-    # summary, _ = sess.run([summaries, train_step])
-    sess.run(train_step)
-    # train_writer.add_summary(summary, i)
+    training_accuracy_result, _ = sess.run([training_accuracy_summary, train_step])
+    training_writer.add_summary(training_accuracy_result, i)
     print('Evaluating the model on validation set...')
-    # TODO this is evaluating only 100 images from the validation set!
-    validation_accuracy_summary = sess.run(summaries)
-    validation_writer.add_summary(validation_accuracy_summary, i)
+    validation_accuracy_result = sess.run(validation_accuracy_summary)
+    validation_writer.add_summary(validation_accuracy_result, i)
 
   # test trained model
   print('Done! The whole training took ' + str((datetime.datetime.now() - start_time).seconds) + ' seconds.')
+  test_accuracy_result = sess.run(test_accuracy_summary)
+  test_writer.add_summary(test_accuracy_result)
 
   # stop our queue threads and properly close the session
   coord.request_stop()
   coord.join(threads)
-  train_writer.close()
+  training_writer.close()
+  validation_writer.close()
+  test_writer.close()
   sess.close()
 
 
