@@ -1,8 +1,6 @@
 import tensorflow as tf
 from tensorflow.python.framework import ops
 
-# TODO make loader load the whole data set in one batch if batch size is not specified
-
 
 class FlickrDatasetLoader(object):
   """ A class loading the photos from Flickr along with the associated labels. """
