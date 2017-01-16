@@ -50,8 +50,7 @@ def get_photo_favorites(photo_id):
       fav_result = flickr.photos.getFavorites(api_key=api_key, photo_id=photo_id, format='parsed-json')
       return fav_result['photo']['total']
     except requests.exceptions.ConnectionError:
-      print('Downloading stars for photo #' + photo_id + ' failed!')
-      print('Retrying...')
+      print('Downloading stars for photo #' + photo_id + ' failed! Retrying...')
       time.sleep(2)
       continue
 
@@ -62,12 +61,12 @@ def save_flickr_photo_to_disk(photo_info):
 
   # check if photo was already downloaded
   if os.path.isfile(file_name):
-    print('Skipping ' + file_name + '... (already downloaded)')
+    # print('Skipping ' + file_name + '... (already downloaded)')
     return
 
   # download the photo
   url = get_flickr_photo_url(photo_info['farm'], photo_info['server'], photo_id, photo_info['secret'])
-  print('Downloading from ' + url + '...')
+  # print('Downloading from ' + url + '...')
   download_flickr_photo(file_name, url)
 
   # save the photo ID to a list along with additional data
@@ -83,6 +82,15 @@ def save_flickr_photo_to_disk(photo_info):
     list_file.write(','.join([photo_id, favorites, str(views), str(width), str(height)]) + '\n')
 
 
+def search_photos(key, min_upload, max_upload, page):
+  result = flickr.photos.search(api_key=key, min_upload_date=min_upload, max_upload_date=max_upload, media='photos',
+                                content_type=1, tags=TAGS, per_page=PAGE_SIZE, tag_mode='any', extras=EXTRAS, page=page,
+                                format='parsed-json')
+  number_of_photos_in_page = len(result['photos']['photo'])
+  pages = int(result['photos']['pages'])
+  return result['photos']['photo'], pages, number_of_photos_in_page
+
+
 # read API key and secret
 with open('api_key.txt') as file:
   api_key = file.read()
@@ -93,19 +101,23 @@ with open('api_secret.txt') as file:
 flickr = flickrapi.FlickrAPI(api_key, api_secret)
 
 # Flickr returns only 4000 unique results, so we need to do multiple queries, here we go iterating by month
-min_upload_date = datetime.datetime(2000, 1, 1)
+min_upload_date = datetime.datetime(2001, 1, 1)
 while min_upload_date <= datetime.datetime.now():
   max_upload_date = min_upload_date + relativedelta(months=1)
-  result = flickr.photos.search(api_key=api_key, min_upload_date=min_upload_date, max_upload_date=max_upload_date,
-                                media='photos', content_type=1, tags=TAGS, per_page=PAGE_SIZE, tag_mode='any',
-                                extras=EXTRAS, format='parsed-json')
 
-  number_of_photos = len(result['photos']['photo'])
-  print('Downloading ' + str(number_of_photos) + ' photos from ' + min_upload_date.strftime('%m/%Y') + '...')
-
-  # open a subprocess for every photo to speed up downloading
-  with Pool(POOL_SIZE) as pool:
-    pool.map(save_flickr_photo_to_disk, result['photos']['photo'])
+  # retry the query until we get the last page of the results
+  page_number = 0
+  number_of_pages = 1
+  while page_number != number_of_pages:
+    page_number += 1
+    photos, number_of_pages, photos_in_page = search_photos(api_key, min_upload_date, max_upload_date, page_number)
+    if page_number == 1:
+      photos_in_month = photos_in_page if number_of_pages == 1 else PAGE_SIZE * number_of_pages
+      print('Downloading about {} photos from {}...'.format(photos_in_month, min_upload_date.strftime('%m/%Y')))
+    # open a subprocess for every photo to speed up downloading
+    print('Downloading next {} photos...'.format(photos_in_page))
+    with Pool(POOL_SIZE) as pool:
+      pool.map(save_flickr_photo_to_disk, photos)
 
   # go to the next month
   min_upload_date = min_upload_date + relativedelta(months=1)
