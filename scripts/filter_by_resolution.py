@@ -4,7 +4,6 @@ from progress.bar import Bar
 from shutil import copyfile
 
 # settings
-
 SOURCE_DIRECTORY = '../data/'
 PHOTOS_LIST = SOURCE_DIRECTORY + 'list.txt'
 TRAINING_DIRECTORY = '../data/train/'
