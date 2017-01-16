@@ -1,4 +1,4 @@
-"""Selects photos with given resolution and copies them to the desired folder, dividing into two sets."""
+"""Selects photos with given resolution and copies them to the desired folder, dividing into three sets."""
 from PIL import Image
 from progress.bar import Bar
 from shutil import copyfile
