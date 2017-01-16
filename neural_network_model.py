@@ -4,57 +4,30 @@ import tensorflow as tf
 class NeuralNetworkModel(object):
   """ Provides helpers for easy construction of a neural network model. """
 
-  @staticmethod
-  def _weight_variable(shape):
-    """ Creates a weight variable with appropriate initialization. """
-    initial = tf.truncated_normal(shape, stddev=0.1)
-    return tf.Variable(initial)
+  def generate_network_model(self, input_tensor: tf.Tensor, reuse_variables=False) -> tf.Tensor:
+    """ TODO comment this. """
+    with tf.variable_scope('neural_network', reuse=reuse_variables):
+      conv1 = self._convolutional_layer('1_convolution', input_tensor, 5, 64, reuse_variables)
+      pool1 = tf.nn.max_pool(conv1, ksize=[1, 3, 3, 1], strides=[1, 2, 2, 1], padding='SAME', name='2_pooling')
+      norm1 = tf.nn.lrn(pool1, 4, bias=1.0, alpha=0.001 / 9.0, beta=0.75, name='3_normalization')
 
-  @staticmethod
-  def _bias_variable(shape):
-    """ Create a bias variable with appropriate initialization. """
-    initial = tf.constant(0.1, shape=shape)
-    return tf.Variable(initial)
+      conv2 = self._convolutional_layer('4_convolution', norm1, 5, 64, reuse_variables)
+      norm2 = tf.nn.lrn(conv2, 4, bias=1.0, alpha=0.001 / 9.0, beta=0.75, name='5_normalization')
+      pool2 = tf.nn.max_pool(norm2, ksize=[1, 3, 3, 1], strides=[1, 2, 2, 1], padding='SAME', name='6_pooling')
 
-  @staticmethod
-  def _variable_summaries(var):
-    """ Attach a lot of summaries to a Tensor (for TensorBoard visualization). """
-    with tf.name_scope('summaries'):
-      mean = tf.reduce_mean(var)
-      tf.summary.scalar('mean', mean)
-      with tf.name_scope('stddev'):
-        stddev = tf.sqrt(tf.reduce_mean(tf.square(var - mean)))
-      tf.summary.scalar('stddev', stddev)
-      tf.summary.scalar('max', tf.reduce_max(var))
-      tf.summary.scalar('min', tf.reduce_min(var))
-      tf.summary.histogram('histogram', var)
+      fc1 = self._fully_connected_layer('7_fully_connected', pool2, 384, reuse_variables)
+      fc2 = self._fully_connected_layer('8_fully_connected', fc1, 192, reuse_variables)
 
-  @staticmethod
-  def _fully_connected_layer(input_tensor, input_dim, output_dim, layer_name, activation=tf.nn.relu):
-    """
-    Reusable code for making a simple neural net layer. It does a matrix multiply, bias add, and then uses an
-    activation function to get the output of a layer. It also sets up name scoping so that the resultant graph is easy
-    to read, and adds a number of summary ops.
-    """
-    with tf.name_scope(layer_name):
-      with tf.name_scope('weights'):
-        weights = NeuralNetworkModel._weight_variable([input_dim, output_dim])
-        NeuralNetworkModel._variable_summaries(weights)
-      with tf.name_scope('biases'):
-        biases = NeuralNetworkModel._bias_variable([output_dim])
-        NeuralNetworkModel._variable_summaries(biases)
-      with tf.name_scope('Wx_plus_b'):
-        preactivate = tf.matmul(input_tensor, weights) + biases
-        tf.summary.histogram('pre_activations', preactivate)
-      activations = activation(preactivate, name='activation')
-      tf.summary.histogram('activations', activations)
-      return activations
+      output = self._output_layer(fc2, reuse_variables)
 
-  def _convolution_layer(self, input_tensor, filter_edge_length, num_of_output_channels, name):
-    with tf.variable_scope(name) as scope:
+    return output
+
+  def _convolutional_layer(self, layer_name, input_tensor, filter_size, num_of_output_channels, reuse_variables):
+    """ TODO comment this. """
+    with tf.variable_scope(layer_name, reuse=reuse_variables) as scope:
       # last value in input tensor corresponds to the number of input channels in this layer
       input_channels = input_tensor.get_shape()[-1].value
-      kernel_shape = [filter_edge_length, filter_edge_length, input_channels, num_of_output_channels]
+      kernel_shape = [filter_size, filter_size, input_channels, num_of_output_channels]
 
       kernel = self._create_variable('weights', shape=kernel_shape, stddev=0.05, weight_decay=0.0)
       strides = [1, 1, 1, 1]  # steps for moving the filter
@@ -62,21 +35,47 @@ class NeuralNetworkModel(object):
       conv = tf.nn.conv2d(input_tensor, kernel, strides, padding='SAME')
       biases = tf.get_variable('biases', [num_of_output_channels], initializer=tf.constant_initializer(0.1))
       pre_activation = tf.nn.bias_add(conv, biases)
-      conv2 = tf.nn.relu(pre_activation, name=scope.name)
+      output = tf.nn.relu(pre_activation, name=scope.name)
+      self._generate_summary(output)
+      return output
 
-      return conv2
+  def _fully_connected_layer(self, layer_name, input_tensor, num_of_outputs, reuse_variables):
+    """ TODO comment this. """
+    with tf.variable_scope(layer_name, reuse=reuse_variables) as scope:
+      batch_size = input_tensor.get_shape()[0].value
+      # flatten the tensor so that the output can be calculated by simple matrix multiplication
+      reshape = tf.reshape(input_tensor, [batch_size, -1])
+      num_of_input_values = reshape.get_shape()[1].value
+      weights = self._create_variable('weights', shape=[num_of_input_values, num_of_outputs],
+                                      stddev=0.04, weight_decay=0.004)
+      biases = tf.get_variable('biases', [num_of_outputs], initializer=tf.constant_initializer(0.1))
+      output = tf.nn.relu(tf.matmul(reshape, weights) + biases, name=scope.name)
+      self._generate_summary(output)
+      return output
+
+  def _output_layer(self, input_tensor, reuse_variables):
+    """ TODO comment this. """
+    with tf.variable_scope('output_layer', reuse=reuse_variables) as scope:
+      inputs_length = input_tensor.get_shape()[-1].value
+      weights = self._create_variable('weights', [inputs_length, 1], stddev=1 / inputs_length, weight_decay=0.0)
+      biases = tf.get_variable('biases', [1], initializer=tf.constant_initializer(0.0))
+      output = tf.sigmoid(tf.add(tf.matmul(input_tensor, weights), biases, name=scope.name))
+      self._generate_summary(output)
+      return output
 
   @staticmethod
   def _create_variable(name, shape, stddev, weight_decay):
-    """
-    Creates a variable, initializes it and adds a proper weight decay for training purposes. `weight_decay`
-    parameter is multiplied by L2Loss weight decay and added to a TensorFlow collection of losses which are used
-    in the loss function.
-    """
-    var = tf.get_variable(name, shape, initializer=tf.truncated_normal_initializer(stddev=stddev))
+    """ Creates a TensorFlow variable, initializes it randomly and adds a weight decay for training purposes. """
+    variable = tf.get_variable(name, shape, initializer=tf.truncated_normal_initializer(stddev=stddev))
 
     if weight_decay is not None:
-      weight_decay = tf.mul(tf.nn.l2_loss(var), weight_decay, name='weight_loss')
+      weight_decay = tf.mul(tf.nn.l2_loss(variable), weight_decay, name='weight_loss')
       tf.add_to_collection('losses', weight_decay)
 
-    return var
+    return variable
+
+  @staticmethod
+  def _generate_summary(x):
+    """ TODO comment this. """
+    tf.summary.histogram(x.op.name + '/activations', x)
+    tf.summary.scalar(x.op.name + '/sparsity', tf.nn.zero_fraction(x))

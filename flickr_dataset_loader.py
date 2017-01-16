@@ -79,9 +79,8 @@ class FlickrDatasetLoader(object):
       uint8_color_values = tf.image.decode_jpeg(photo, channels=self.NUMBER_OF_CHANNELS)
       uint8_color_values.set_shape([self.IMAGE_HEIGHT, self.IMAGE_WIDTH, self.NUMBER_OF_CHANNELS])
       float32_color_values = tf.to_float(uint8_color_values)
-      flat_float32_color_values = tf.reshape(float32_color_values, [-1])  # flatten the tensor (TODO remove)
       # slice the data into mini batches
-      return tf.train.batch([flat_float32_color_values, label], batch_size=batch_size), len(filenames_list)
+      return tf.train.batch([float32_color_values, label], batch_size=batch_size), len(filenames_list)
 
   def get_training_set_size(self):
     if self.training_set_size == 0:

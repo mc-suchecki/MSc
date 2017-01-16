@@ -4,15 +4,21 @@ import os
 import tensorflow as tf
 
 from flickr_dataset_loader import FlickrDatasetLoader
+from neural_network_model import NeuralNetworkModel
 
-# TODO use placeholders for list of filenames in order to not duplicate the model code 3 times
-# TODO re-think the computation graph and add namespaces
 # TODO save the model after training and write a script to process a given photo
-# TODO add convolution layers and test bigger models
+# TODO fix the calculation of accuracy on validation and test sets: so far it's not calculated on the whole set
+
+# TensorFlow configuration
+LOG_DEVICE_PLACEMENT = True
 
 # training parameters
-TRAINING_BATCH_SIZE = 100
-TRAINING_ITERATIONS_LIMIT = 10
+TRAINING_BATCH_SIZE = 10
+TRAINING_ITERATIONS_LIMIT = 100000
+
+# evaluation parameters
+TEST_BATCH_SIZE = 10
+VALIDATION_BATCH_SIZE = 10
 
 # TensorBoard configuration
 TENSOR_BOARD_DIR = os.path.join('.', 'tmp')
@@ -33,40 +39,37 @@ def main(_):
   # load the datasets
   flickr_dataset_loader = FlickrDatasetLoader()
   training_photo_batch, training_label_batch = flickr_dataset_loader.create_training_batch(TRAINING_BATCH_SIZE)
-  validation_photo_batch, validation_label_batch = flickr_dataset_loader.create_validation_batch()
-  test_photo_batch, test_label_batch = flickr_dataset_loader.create_test_batch()
-
-  # create the model
-  x = training_photo_batch  # input tensor (so far flattened)
-  w = tf.Variable(tf.zeros([flickr_dataset_loader.TRAINING_EXAMPLE_SIZE, 1], dtype=tf.float32))  # weights tensor
-  b = tf.Variable(tf.zeros([1], dtype=tf.float32))  # bias tensor (so far only 1 neuron)
-  y_ = training_label_batch  # labels tensor
-  y = tf.sigmoid(tf.matmul(x, w) + b)  # predictions
+  validation_photo_batch, validation_label_batch = flickr_dataset_loader.create_validation_batch(VALIDATION_BATCH_SIZE)
+  test_photo_batch, test_label_batch = flickr_dataset_loader.create_test_batch(TEST_BATCH_SIZE)
 
   # training
-  cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(y, y_))
+  neural_network_model = NeuralNetworkModel()
+  training_set_predictions = neural_network_model.generate_network_model(training_photo_batch)
+  cross_entropy = tf.reduce_mean(
+    tf.nn.sigmoid_cross_entropy_with_logits(training_set_predictions, tf.cast(training_label_batch, tf.float32)))
   train_step = tf.train.AdamOptimizer().minimize(cross_entropy)
 
   # evaluating on training set
-  training_correct_prediction = tf.equal(tf.cast(tf.round(y), tf.bool), training_label_batch)
+  training_correct_prediction = tf.equal(tf.cast(tf.round(training_set_predictions), tf.bool), training_label_batch)
   training_accuracy = tf.reduce_mean(tf.cast(training_correct_prediction, tf.float32))
 
   # evaluating on validation set
-  y_validation = tf.sigmoid(tf.matmul(validation_photo_batch, w) + b)
-  validation_correct_prediction = tf.equal(tf.cast(tf.round(y_validation), tf.bool), validation_label_batch)
+  validation_set_predictions = neural_network_model.generate_network_model(validation_photo_batch, True)
+  validation_correct_prediction = tf.equal(tf.cast(tf.round(validation_set_predictions), tf.bool),
+                                           validation_label_batch)
   validation_accuracy = tf.reduce_mean(tf.cast(validation_correct_prediction, tf.float32))
 
   # evaluating on test set
-  y_test = tf.sigmoid(tf.matmul(test_photo_batch, w) + b)
-  test_correct_prediction = tf.equal(tf.cast(tf.round(y_test), tf.bool), test_label_batch)
+  test_set_predictions = neural_network_model.generate_network_model(test_photo_batch, True)
+  test_correct_prediction = tf.equal(tf.cast(tf.round(test_set_predictions), tf.bool), test_label_batch)
   test_accuracy = tf.reduce_mean(tf.cast(test_correct_prediction, tf.float32))
 
   # initialize session
-  sess = tf.InteractiveSession()
+  sess = tf.InteractiveSession(config=tf.ConfigProto(log_device_placement=LOG_DEVICE_PLACEMENT))
 
   # initialize TensorBoard
   # with tf.name_scope('input'):
-  #   tf.summary.image('images', x, 20)
+  #   input_images_summary = tf.summary.image('images', training_photo_batch, 20)
   with tf.name_scope('evaluation'):
     training_accuracy_summary = tf.summary.scalar('Accuracy on the training set', training_accuracy)
     validation_accuracy_summary = tf.summary.scalar('Accuracy on the cross validation set', validation_accuracy)
@@ -84,6 +87,7 @@ def main(_):
     print('Training with batch {}/{} (containing {} photos)...'.format(i + 1, number_of_batches, TRAINING_BATCH_SIZE))
     training_accuracy_result, _ = sess.run([training_accuracy_summary, train_step])
     training_writer.add_summary(training_accuracy_result, i)
+    # training_writer.add_summary(input_images_summary, i)
     print('Evaluating the model on validation set...')
     validation_accuracy_result = sess.run(validation_accuracy_summary)
     validation_writer.add_summary(validation_accuracy_result, i)

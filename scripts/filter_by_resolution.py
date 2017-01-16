@@ -3,6 +3,8 @@ from PIL import Image
 from progress.bar import Bar
 from shutil import copyfile
 
+# TODO modify the script in order to straighten the distribution of classes
+
 # settings
 SOURCE_DIRECTORY = '../data/'
 PHOTOS_LIST = SOURCE_DIRECTORY + 'list.txt'
