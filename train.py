@@ -1,13 +1,13 @@
 """Trains neural network to assess the quality of photos."""
 import datetime
 import os
+import numpy
 import tensorflow as tf
 
 from flickr_dataset_loader import FlickrDatasetLoader
 from neural_network_model import NeuralNetworkModel
 
 # TODO save the model after training and write a script to process a given photo
-# TODO fix the calculation of accuracy on validation and test sets: so far it's not calculated on the whole set
 
 # TensorFlow configuration
 LOG_DEVICE_PLACEMENT = True
@@ -19,6 +19,8 @@ TRAINING_ITERATIONS_LIMIT = 100000
 # evaluation parameters
 TEST_BATCH_SIZE = 10
 VALIDATION_BATCH_SIZE = 10
+VALIDATION_SET_SIZE = 1500  # TODO this should not be here
+TEST_SET_SIZE = 1500  # TODO this should not be here
 
 # TensorBoard configuration
 TENSOR_BOARD_DIR = os.path.join('.', 'tmp')
@@ -70,10 +72,8 @@ def main(_):
   # initialize TensorBoard
   # with tf.name_scope('input'):
   #   input_images_summary = tf.summary.image('images', training_photo_batch, 20)
-  with tf.name_scope('evaluation'):
+  with tf.name_scope('Model evaluation'):
     training_accuracy_summary = tf.summary.scalar('Accuracy on the training set', training_accuracy)
-    validation_accuracy_summary = tf.summary.scalar('Accuracy on the cross validation set', validation_accuracy)
-    test_accuracy_summary = tf.summary.scalar('Accuracy on the test set', test_accuracy)
   training_writer = tf.summary.FileWriter(TRAINING_SUMMARY_DIR, sess.graph)
   validation_writer = tf.summary.FileWriter(VALIDATION_SUMMARY_DIR, sess.graph)
   test_writer = tf.summary.FileWriter(TEST_SUMMARY_DIR, sess.graph)
@@ -88,13 +88,29 @@ def main(_):
     training_accuracy_result, _ = sess.run([training_accuracy_summary, train_step])
     training_writer.add_summary(training_accuracy_result, i)
     # training_writer.add_summary(input_images_summary, i)
-    print('Evaluating the model on validation set...')
-    validation_accuracy_result = sess.run(validation_accuracy_summary)
-    validation_writer.add_summary(validation_accuracy_result, i)
+
+    # evaluate the model on validation set every 20th iteration
+    if i % 20 == 0:
+      print('Evaluating the model on the cross-validation set...')
+      accuracies = []
+      for _ in range(VALIDATION_SET_SIZE // VALIDATION_BATCH_SIZE):
+        accuracies.append(sess.run(validation_accuracy))
+      average_validation_accuracy = numpy.asscalar(numpy.mean(accuracies))
+      with tf.name_scope('Model evaluation'):
+        validation_accuracy_result = tf.Summary()
+        validation_accuracy_result.value.add(name="Accuracy on the cross-validation set",
+                                             simple_value=average_validation_accuracy)
+      validation_writer.add_summary(validation_accuracy_result, i)
 
   # compute accuracy of the trained model on test set
   print('Done! The whole training took {} seconds.'.format((datetime.datetime.now() - start_time).seconds))
-  test_accuracy_result = sess.run(test_accuracy_summary)
+  test_accuracies = []
+  for _ in range(VALIDATION_SET_SIZE // VALIDATION_BATCH_SIZE):
+    test_accuracies.append(sess.run(test_accuracy))
+  average_test_accuracy = numpy.asscalar(numpy.mean(test_accuracies))
+  with tf.name_scope('evaluation'):
+    test_accuracy_result = tf.Summary()
+    test_accuracy_result.value.add(name="Accuracy on the test set", simple_value=average_test_accuracy)
   test_writer.add_summary(test_accuracy_result)
 
   # stop our queue threads and properly close the session
