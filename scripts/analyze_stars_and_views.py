@@ -1,16 +1,21 @@
 """Displays a histogram for photos metadata - number of stars and views."""
+from math import log
 import matplotlib.pyplot as pyplot
 import numpy
 
 # settings
 PHOTOS_LIST_LOCATION = '../data/list.txt'
 NUMBER_OF_BINS = 100
+VIEWS_THRESHOLD = 100
 
 # init
 photos_list = open(PHOTOS_LIST_LOCATION, 'r')
 stars_list = []
+stars_log_list = []
 views_list = []
+views_log_list = []
 stars_views_ratio_list = []
+stars_views_log_ratio_list = []
 
 # collect data about number of stars and views across the dataset
 # line in the list file looks like: ID, stars, views, width, height
@@ -21,10 +26,16 @@ for line in photos_list:
   photo_metadata_array = line.split(',')
   stars = int(photo_metadata_array[1])
   views = int(photo_metadata_array[2])
+  # skip photos with views below certain threshold
+  if views < VIEWS_THRESHOLD:
+    continue
   stars_views_ratio = 0 if (views == 0) else (stars / views)
   stars_list.append(stars)
+  stars_log_list.append(log(stars + 1, 2))
   views_list.append(views)
+  views_log_list.append(log(views + 1, 2))
   stars_views_ratio_list.append(stars_views_ratio)
+  stars_views_log_ratio_list.append(log((stars + 1) / (views + 1), 2))
   zero_stars_photos_count += 1 if stars == 0 else 0
 
 # print some basic information
@@ -53,14 +64,28 @@ print('90% photos have stars to views ratio less than {}.'.format(numpy.percenti
 print('95% photos have stars to views ratio less than {}.'.format(numpy.percentile(stars_views_ratio_list, 95)))
 
 # plot the data using histograms
-fig, axes = pyplot.subplots(nrows=1, ncols=2, sharex=False, sharey=True)
-axes[0].set_ylabel('Number of photos')
-axes[1].set_ylabel('Number of photos')
-# axes[2].set_ylabel('Number of photos')
-axes[0].hist(stars_list, bins=NUMBER_OF_BINS)
-axes[0].set_xlabel('Number of stars per photo')
-axes[1].hist(views_list, bins=NUMBER_OF_BINS)
-axes[1].set_xlabel('Number of views per photo')
-# axes[2].hist(views_list, bins=NUMBER_OF_BINS)
-# axes[2].set_xlabel('Ratio of stars to views per photo')
-# pyplot.show()
+fig, axes = pyplot.subplots(nrows=2, ncols=3, sharex=False, sharey=False)
+fig.suptitle("Statistics for {} photos with {} views threshold".format(photos_count, VIEWS_THRESHOLD))
+axes[0][0].set_ylabel('Number of photos')
+axes[0][1].set_ylabel('Number of photos')
+axes[0][2].set_ylabel('Number of photos')
+axes[1][0].set_ylabel('Number of photos')
+axes[1][1].set_ylabel('Number of photos')
+axes[1][2].set_ylabel('Number of photos')
+
+axes[0][0].hist(stars_list, bins=NUMBER_OF_BINS)
+axes[0][0].set_xlabel('Number of stars per photo')
+axes[1][0].hist(stars_log_list, bins=NUMBER_OF_BINS)
+axes[1][0].set_xlabel('Logarithm of number of stars per photo')
+
+axes[0][1].hist(views_list, bins=NUMBER_OF_BINS)
+axes[0][1].set_xlabel('Number of views per photo')
+axes[1][1].hist(views_log_list, bins=NUMBER_OF_BINS)
+axes[1][1].set_xlabel('Logarithm of number of views per photo')
+
+axes[0][2].hist(stars_views_ratio_list, bins=NUMBER_OF_BINS)
+axes[0][2].set_xlabel('Ratio of stars to views per photo')
+axes[1][2].hist(stars_views_log_ratio_list, bins=NUMBER_OF_BINS)
+axes[1][2].set_xlabel('Logarithm of ratio of stars to views per photo')
+
+pyplot.show()
