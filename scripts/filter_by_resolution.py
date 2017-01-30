@@ -12,7 +12,7 @@ TEST_DIRECTORY = '../data/test/'
 DESIRED_WIDTH = 240
 DESIRED_HEIGHT = 180
 VIEWS_THRESHOLD = 100
-AESTHETICS_SCORE_MEDIAN = -7.344295907915817      # calculated by other script
+AESTHETICS_SCORE_MEDIAN = -7.344295907915817  # calculated by other script
 
 
 # helpers
@@ -38,6 +38,7 @@ def is_photo_resolution_okay(photo_metadata: str):
   width = int(photo_metadata.split(',')[3])
   height = int(photo_metadata.split(',')[4])
   return width == DESIRED_WIDTH and height == DESIRED_HEIGHT
+
 
 with open(PHOTOS_LIST_FILE) as photos_list_file:
   # filter the data
@@ -66,8 +67,9 @@ with open(PHOTOS_LIST_FILE) as photos_list_file:
     photo_file_name = photo_id + '.jpg'
     copyfile(SOURCE_DIRECTORY + photo_file_name, get_destination_directory(photo_index) + photo_file_name)
     with open(get_destination_directory(photo_index) + 'list.txt', "a") as destination_list_file:
-      destination_list_file.write(','.join(photo_id, ))
+      destination_list_file.write(','.join([photo_id, str(photo_label)]) + '\n')
 
   progress_bar.finish()
   print('Copied ' + str(len(photos_list)) + ' photos.')
-  print('There were {} photos classified as aesthetically pleasing and {} not pleasing'.format(good_photos, bad_photos))
+  print(
+    'There were {} photos classified as aesthetically pleasing and {} not pleasing.'.format(good_photos, bad_photos))
