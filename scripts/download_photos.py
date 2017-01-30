@@ -60,7 +60,7 @@ def save_flickr_photo_to_disk(photo_info):
 
   # check if photo was already downloaded
   if os.path.isfile(file_name):
-    print('Skipping ' + file_name + '... (already downloaded)')
+    # print('Skipping ' + file_name + '... (already downloaded)')
     return
 
   # download the photo
@@ -108,7 +108,7 @@ with open('api_secret.txt') as file:
 flickr = flickrapi.FlickrAPI(api_key, api_secret)
 
 # Flickr returns only 4000 unique results, so we need to do multiple queries, here we go iterating by month
-min_upload_date = datetime.datetime(2013, 10, 1)
+min_upload_date = datetime.datetime(2014, 5, 1)
 while min_upload_date <= datetime.datetime.now():
   max_upload_date = min_upload_date + relativedelta(months=1)
 

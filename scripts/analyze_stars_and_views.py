@@ -63,6 +63,13 @@ print('85% photos have stars to views ratio less than {}.'.format(numpy.percenti
 print('90% photos have stars to views ratio less than {}.'.format(numpy.percentile(stars_views_ratio_list, 90)))
 print('95% photos have stars to views ratio less than {}.'.format(numpy.percentile(stars_views_ratio_list, 95)))
 
+print('Aesthetics score stats:')
+print('Average is {}.'.format(numpy.average(stars_views_log_ratio_list)))
+print('Median is {}.'.format(numpy.median(stars_views_log_ratio_list)))
+print('85% photos have score of less than {}.'.format(numpy.percentile(stars_views_log_ratio_list, 85)))
+print('90% photos have score of less than {}.'.format(numpy.percentile(stars_views_log_ratio_list, 90)))
+print('95% photos have score of less than {}.'.format(numpy.percentile(stars_views_log_ratio_list, 95)))
+
 # plot the data using histograms
 fig, axes = pyplot.subplots(nrows=2, ncols=3, sharex=False, sharey=False)
 fig.suptitle("Statistics for {} photos with {} views threshold".format(photos_count, VIEWS_THRESHOLD))

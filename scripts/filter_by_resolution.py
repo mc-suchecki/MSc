@@ -1,5 +1,5 @@
 """Selects photos with given resolution and copies them to the desired folder, dividing into three sets."""
-from PIL import Image
+from math import log
 from progress.bar import Bar
 from shutil import copyfile
 
@@ -11,17 +11,11 @@ VALIDATION_DIRECTORY = '../data/validation/'
 TEST_DIRECTORY = '../data/test/'
 DESIRED_WIDTH = 240
 DESIRED_HEIGHT = 180
-DESIRED_NUMBER_OF_PHOTOS = 12000
+VIEWS_THRESHOLD = 100
+AESTHETICS_SCORE_MEDIAN = -7.344295907915817      # calculated by other script
 
 
 # helpers
-def get_photo_dimensions(file_name):
-  """Returns photo resolution for a given filename."""
-  image = Image.open(SOURCE_DIRECTORY + str(file_name))
-  image.verify()
-  return image.size
-
-
 def get_destination_directory(number):
   """Returns training dir for 3/4 cases, validation dir for 1/8 cases and test dir for 1/8 cases."""
   if number % 2 == 0 or number % 4 == 1:
@@ -34,10 +28,10 @@ def get_destination_directory(number):
 
 def get_photo_score(photo_metadata: str):
   """ Returns photo 'score'. The higher the ratio, the better. """
-  # TODO so far just stars count seems better - check this!
   stars = int(photo_metadata.split(',')[1])
   views = int(photo_metadata.split(',')[2])
-  return stars
+  score = log((stars + 1) / (views + 1), 2)
+  return score
 
 
 def is_photo_resolution_okay(photo_metadata: str):
@@ -45,49 +39,35 @@ def is_photo_resolution_okay(photo_metadata: str):
   height = int(photo_metadata.split(',')[4])
   return width == DESIRED_WIDTH and height == DESIRED_HEIGHT
 
-photos_copied = int(0)
 with open(PHOTOS_LIST_FILE) as photos_list_file:
   # filter the data
   photos_list = photos_list_file.readlines()
-  print('Found {} photos available.'.format(len(photos_list)))
+  print('{} photos available.'.format(len(photos_list)))
   print('Removing the photos with resolution other than {}x{} pixels...'.format(DESIRED_WIDTH, DESIRED_HEIGHT))
   photos_list = [photo for photo in photos_list if is_photo_resolution_okay(photo)]
   print('{} photos left.'.format(len(photos_list)))
-  print('Removing the photos with less than 100 views...')
-  photos_list = [photo for photo in photos_list if int(photo.split(',')[2]) >= 100]
+  print('Removing the photos with less than {} views...'.format(VIEWS_THRESHOLD))
+  photos_list = [photo for photo in photos_list if int(photo.split(',')[2]) >= VIEWS_THRESHOLD]
   print('{} photos left.'.format(len(photos_list)))
-  print('Sorting the photos by stars count...')
-  photos_list.sort(key=get_photo_score)
 
   # copy the photos
-  progress_bar = Bar('Copying photos...', max=DESIRED_NUMBER_OF_PHOTOS)
-  last_worst_photo_index = 0
-  last_best_photo_index = len(photos_list) - 1
-  last_best_photo_stars = 999999999
-  while (photos_copied < DESIRED_NUMBER_OF_PHOTOS) and (int(last_best_photo_stars) > 0):
+  progress_bar = Bar('Copying photos...', max=len(photos_list))
+  photo_index = 0
+  good_photos = 0
+  bad_photos = 0
+  for line in photos_list:
+    photo_index += 1
     progress_bar.next()
-    worst_photo = photos_list[last_worst_photo_index]
-    best_photo = photos_list[last_best_photo_index]
-
-    # copy the current best and worst photos
-    best_photo_id = best_photo.split(',')[0]
-    best_file_name = best_photo_id + '.jpg'
-    copyfile(SOURCE_DIRECTORY + best_file_name, get_destination_directory(last_worst_photo_index) + best_file_name)
-    with open(get_destination_directory(last_worst_photo_index) + 'list.txt', "a") as destination_list_file:
-      destination_list_file.write(best_photo)
-    worst_photo_id = worst_photo.split(',')[0]
-    worst_file_name = worst_photo_id + '.jpg'
-    copyfile(SOURCE_DIRECTORY + worst_file_name, get_destination_directory(last_worst_photo_index) + worst_file_name)
-    with open(get_destination_directory(last_worst_photo_index) + 'list.txt', "a") as destination_list_file:
-      destination_list_file.write(worst_photo)
-
-    # save the number of stars for the last best photo (to prevent copying too much photos with 0 stars and skewed data)
-    last_best_photo_stars = best_photo.split(',')[1]
-
-    # move the indexes further
-    last_worst_photo_index += 1
-    last_best_photo_index -= 1
-    photos_copied += 2
+    photo_data = line.split(',')
+    photo_id = photo_data[0]
+    photo_label = 0 if get_photo_score(line) < AESTHETICS_SCORE_MEDIAN else 1
+    good_photos += photo_label
+    bad_photos += 0 if photo_label == 1 else 1
+    photo_file_name = photo_id + '.jpg'
+    copyfile(SOURCE_DIRECTORY + photo_file_name, get_destination_directory(photo_index) + photo_file_name)
+    with open(get_destination_directory(photo_index) + 'list.txt', "a") as destination_list_file:
+      destination_list_file.write(','.join(photo_id, ))
 
   progress_bar.finish()
-  print('Copied ' + str(photos_copied) + ' photos.')
+  print('Copied ' + str(len(photos_list)) + ' photos.')
+  print('There were {} photos classified as aesthetically pleasing and {} not pleasing'.format(good_photos, bad_photos))
