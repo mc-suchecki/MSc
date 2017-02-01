@@ -127,4 +127,4 @@ while min_upload_date <= datetime.datetime.now():
       pool.map(save_flickr_photo_to_disk, photos)
 
   # go to the next month
-  min_upload_date = min_upload_date + relativedelta(months=1)
+  min_upload_date = min_upload_date + relativedelta(days=1)

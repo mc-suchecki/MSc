@@ -9,18 +9,18 @@ from neural_network_model import NeuralNetworkModel
 
 # TODO save the model after training and write a script to process a given photo
 
-# TensorFlow configuration
-LOG_DEVICE_PLACEMENT = True
+# logging configuration
+LOG_DEVICE_PLACEMENT = False
 
 # training parameters
 TRAINING_BATCH_SIZE = 10
-TRAINING_ITERATIONS_LIMIT = 100000
+TRAINING_ITERATIONS_LIMIT = 1000000
 
 # evaluation parameters
 TEST_BATCH_SIZE = 10
 VALIDATION_BATCH_SIZE = 10
-VALIDATION_SET_SIZE = 1500  # TODO this should not be here
-TEST_SET_SIZE = 1500  # TODO this should not be here
+VALIDATION_SET_SIZE_LIMIT = 1000000
+TEST_SET_SIZE_LIMIT = 1000000
 
 # TensorBoard configuration
 TENSOR_BOARD_DIR = os.path.join('.', 'tmp')
@@ -47,33 +47,39 @@ def main(_):
   # training
   neural_network_model = NeuralNetworkModel()
   training_set_predictions = neural_network_model.generate_network_model(training_photo_batch)
+  training_label_batch = tf.Print(training_label_batch, [training_label_batch], message="Labels: ", summarize=10)
   cross_entropy = tf.reduce_mean(
-    tf.nn.sigmoid_cross_entropy_with_logits(training_set_predictions, tf.cast(training_label_batch, tf.float32)))
+    tf.nn.sigmoid_cross_entropy_with_logits(training_set_predictions, training_label_batch))
+  cross_entropy = tf.Print(cross_entropy, [cross_entropy], message="Cross entropy: ")
   train_step = tf.train.AdamOptimizer().minimize(cross_entropy)
 
   # evaluating on training set
-  training_correct_prediction = tf.equal(tf.cast(tf.round(training_set_predictions), tf.bool), training_label_batch)
+  training_correct_prediction = tf.equal(tf.round(training_set_predictions), training_label_batch)
   training_accuracy = tf.reduce_mean(tf.cast(training_correct_prediction, tf.float32))
 
   # evaluating on validation set
   validation_set_predictions = neural_network_model.generate_network_model(validation_photo_batch, True)
-  validation_correct_prediction = tf.equal(tf.cast(tf.round(validation_set_predictions), tf.bool),
-                                           validation_label_batch)
+  validation_label_batch = tf.Print(validation_label_batch, [validation_label_batch], message="Labels: ", summarize=10)
+  validation_correct_prediction = tf.equal(tf.round(validation_set_predictions), validation_label_batch)
   validation_accuracy = tf.reduce_mean(tf.cast(validation_correct_prediction, tf.float32))
+  validation_cross_entropy = tf.reduce_mean(
+    tf.nn.sigmoid_cross_entropy_with_logits(validation_set_predictions, validation_label_batch))
 
   # evaluating on test set
   test_set_predictions = neural_network_model.generate_network_model(test_photo_batch, True)
-  test_correct_prediction = tf.equal(tf.cast(tf.round(test_set_predictions), tf.bool), test_label_batch)
+  test_correct_prediction = tf.equal(tf.round(test_set_predictions), test_label_batch)
   test_accuracy = tf.reduce_mean(tf.cast(test_correct_prediction, tf.float32))
+  test_cross_entropy = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(test_set_predictions, test_label_batch))
 
   # initialize session
   sess = tf.InteractiveSession(config=tf.ConfigProto(log_device_placement=LOG_DEVICE_PLACEMENT))
 
   # initialize TensorBoard
-  # with tf.name_scope('input'):
-  #   input_images_summary = tf.summary.image('images', training_photo_batch, 20)
-  with tf.name_scope('Model evaluation'):
+  with tf.name_scope('input'):
+    input_images_summary = tf.summary.image('images', training_photo_batch, 20)
+  with tf.name_scope('evaluation'):
     training_accuracy_summary = tf.summary.scalar('Accuracy on the training set', training_accuracy)
+    cross_entropy_summary = tf.summary.scalar('Cross entropy on the training set', cross_entropy)
   training_writer = tf.summary.FileWriter(TRAINING_SUMMARY_DIR, sess.graph)
   validation_writer = tf.summary.FileWriter(VALIDATION_SUMMARY_DIR, sess.graph)
   test_writer = tf.summary.FileWriter(TEST_SUMMARY_DIR, sess.graph)
@@ -85,32 +91,43 @@ def main(_):
   number_of_batches = flickr_dataset_loader.get_training_set_size() // TRAINING_BATCH_SIZE
   for i in range(min(number_of_batches, TRAINING_ITERATIONS_LIMIT)):
     print('Training with batch {}/{} (containing {} photos)...'.format(i + 1, number_of_batches, TRAINING_BATCH_SIZE))
-    training_accuracy_result, _ = sess.run([training_accuracy_summary, train_step])
+    _, cross_entropy_result, training_accuracy_result = sess.run(
+      [train_step, cross_entropy_summary, training_accuracy_summary])
     training_writer.add_summary(training_accuracy_result, i)
-    # training_writer.add_summary(input_images_summary, i)
+    training_writer.add_summary(cross_entropy_result, i)
+    # training_writer.add_summary(image_result, i)
 
     # evaluate the model on validation set every 20th iteration
     if i % 20 == 0:
       print('Evaluating the model on the cross-validation set...')
       accuracies = []
-      for _ in range(VALIDATION_SET_SIZE // VALIDATION_BATCH_SIZE):
-        accuracies.append(sess.run(validation_accuracy))
+      validation_cross_entropy_values = []
+      for _ in range(
+              min(flickr_dataset_loader.get_validation_set_size(), VALIDATION_SET_SIZE_LIMIT) // VALIDATION_BATCH_SIZE):
+        validation_accuracy_result, validation_cross_entropy_result = sess.run([validation_accuracy, validation_cross_entropy])
+        accuracies.append(validation_accuracy_result)
+        validation_cross_entropy_values.append(validation_cross_entropy_result)
       average_validation_accuracy = numpy.asscalar(numpy.mean(accuracies))
-      with tf.name_scope('Model evaluation'):
+      average_validation_cross_entropy = numpy.asscalar(numpy.mean(validation_cross_entropy_values))
+      with tf.name_scope('evaluation'):
         validation_accuracy_result = tf.Summary()
-        validation_accuracy_result.value.add(name="Accuracy on the cross-validation set",
+        validation_accuracy_result.value.add(tag="Accuracy on the cross-validation set",
                                              simple_value=average_validation_accuracy)
+        validation_cross_entropy_result = tf.Summary()
+        validation_cross_entropy_result.value.add(tag="Average cross-entropy on the cross-validation set",
+                                                  simple_value=average_validation_cross_entropy)
       validation_writer.add_summary(validation_accuracy_result, i)
+      validation_writer.add_summary(validation_cross_entropy_result, i)
 
   # compute accuracy of the trained model on test set
   print('Done! The whole training took {} seconds.'.format((datetime.datetime.now() - start_time).seconds))
   test_accuracies = []
-  for _ in range(VALIDATION_SET_SIZE // VALIDATION_BATCH_SIZE):
+  for _ in range(min(flickr_dataset_loader.get_test_set_size(), TEST_SET_SIZE_LIMIT) // TEST_BATCH_SIZE):
     test_accuracies.append(sess.run(test_accuracy))
   average_test_accuracy = numpy.asscalar(numpy.mean(test_accuracies))
   with tf.name_scope('evaluation'):
     test_accuracy_result = tf.Summary()
-    test_accuracy_result.value.add(name="Accuracy on the test set", simple_value=average_test_accuracy)
+    test_accuracy_result.value.add(tag="Accuracy on the test set", simple_value=average_test_accuracy)
   test_writer.add_summary(test_accuracy_result)
 
   # stop our queue threads and properly close the session

@@ -55,7 +55,7 @@ class FlickrDatasetLoader(object):
     return test_batch
 
   def _create_photo_and_label_batches(self, source_directory: str, batch_size: int):
-    # TODO split this file into smaller functions
+    # TODO split this function into smaller functions
     # read the list of photo IDs and labels
     photos_list = open(source_directory + self.LIST_FILE_NAME, 'r')
     filenames_list = []
@@ -63,14 +63,13 @@ class FlickrDatasetLoader(object):
     # get lists of photo file names and labels
     for line in photos_list:
       filenames_list.append(source_directory + line.split(',')[0] + '.jpg')
-      # so far the naive approach is to assess an photo as aesthetically pleasing if it has at least one star
-      labels_list.append([bool(int(line.split(',')[1]))])  # TODO improve the assignment of the classes
+      labels_list.append([bool(int(line.split(',')[1]))])
     # set batch size to the whole dataset if batch size is not provided
     if batch_size is None:
       batch_size = len(filenames_list)
     # convert the lists to tensors
     filenames = tf.convert_to_tensor(filenames_list, dtype=tf.string)
-    labels = tf.convert_to_tensor(labels_list, dtype=tf.bool)
+    labels = tf.convert_to_tensor(labels_list, dtype=tf.float32)
     with ops.name_scope(None, 'load_input_data', [filenames, labels]):
       # create queue with filenames and labels
       file_name, label = tf.train.slice_input_producer([filenames, labels], shuffle=True)
