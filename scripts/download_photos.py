@@ -107,10 +107,10 @@ with open('api_secret.txt') as file:
 # connect to Flickr
 flickr = flickrapi.FlickrAPI(api_key, api_secret)
 
-# Flickr returns only 4000 unique results, so we need to do multiple queries, here we go iterating by month
-min_upload_date = datetime.datetime(2014, 5, 1)
+# Flickr returns only 4000 unique results, so we need to do multiple queries, here we go iterating by day
+min_upload_date = datetime.datetime(2012, 1, 1)
 while min_upload_date <= datetime.datetime.now():
-  max_upload_date = min_upload_date + relativedelta(months=1)
+  max_upload_date = min_upload_date + relativedelta(days=1)
 
   # retry the query until we get the last page of the results
   page_number = 0
@@ -120,7 +120,7 @@ while min_upload_date <= datetime.datetime.now():
     photos, number_of_pages, photos_in_page = search_photos(api_key, min_upload_date, max_upload_date, page_number)
     if page_number == 1:
       photos_in_month = photos_in_page if number_of_pages == 1 else PAGE_SIZE * number_of_pages
-      print('Downloading about {} photos from {}...'.format(photos_in_month, min_upload_date.strftime('%m/%Y')))
+      print('Downloading about {} photos from {}...'.format(photos_in_month, min_upload_date.strftime('%d/%m/%Y')))
     # open a subprocess for every photo to speed up downloading
     print('Downloading next {} photos...'.format(photos_in_page))
     with Pool(POOL_SIZE) as pool:
