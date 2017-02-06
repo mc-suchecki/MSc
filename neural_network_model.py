@@ -4,7 +4,36 @@ import tensorflow as tf
 class NeuralNetworkModel(object):
   """ Provides helpers for easy construction of a neural network model. """
 
-  def generate_network_model(self, input_tensor: tf.Tensor, reuse_variables=False) -> tf.Tensor:
+  def generate_oxford_network_model(self, input_tensor: tf.Tensor, reuse_variables=False) -> tf.Tensor:
+    """ TODO comment this. """
+    with tf.variable_scope('neural_network', reuse=reuse_variables):
+      conv1 = self._convolutional_layer('1_convolution', input_tensor, 3, 64, reuse_variables)
+      pool1 = tf.nn.max_pool(conv1, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME', name='2_pooling')
+
+      conv2 = self._convolutional_layer('3_convolution', pool1, 3, 128, reuse_variables)
+      pool2 = tf.nn.max_pool(conv2, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME', name='4_pooling')
+
+      conv3 = self._convolutional_layer('5_convolution', pool2, 3, 256, reuse_variables)
+      conv4 = self._convolutional_layer('6_convolution', conv3, 3, 256, reuse_variables)
+      pool3 = tf.nn.max_pool(conv3, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME', name='7_pooling')
+
+      conv5 = self._convolutional_layer('8_convolution', pool3, 3, 512, reuse_variables)
+      conv6 = self._convolutional_layer('9_convolution', conv5, 3, 512, reuse_variables)
+      pool4 = tf.nn.max_pool(conv6, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME', name='10_pooling')
+
+      conv7 = self._convolutional_layer('11_convolution', pool4, 3, 512, reuse_variables)
+      conv8 = self._convolutional_layer('12_convolution', conv7, 3, 512, reuse_variables)
+      pool5 = tf.nn.max_pool(conv8, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME', name='13_pooling')
+
+      fc1 = self._fully_connected_layer('14_fully_connected', pool2, 4096, reuse_variables)
+      fc2 = self._fully_connected_layer('15_fully_connected', fc1, 4096, reuse_variables)
+
+      output = self._output_layer(fc2, reuse_variables)
+      output = tf.Print(output, [output], message="Last layer activations: ", summarize=10)
+
+    return output
+
+  def generate_simple_network_model(self, input_tensor: tf.Tensor, reuse_variables=False) -> tf.Tensor:
     """ TODO comment this. """
     with tf.variable_scope('neural_network', reuse=reuse_variables):
       conv1 = self._convolutional_layer('1_convolution', input_tensor, 5, 64, reuse_variables)

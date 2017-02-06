@@ -73,6 +73,7 @@ class FlickrDatasetLoader(object):
     with ops.name_scope(None, 'load_input_data', [filenames, labels]):
       # create queue with filenames and labels
       file_name, label = tf.train.slice_input_producer([filenames, labels], shuffle=True)
+      file_name = tf.Print(file_name, [file_name], message="Opening photo: ")
       # convert filenames of photos to input vectors
       photo = tf.read_file(file_name)
       uint8_color_values = tf.image.decode_jpeg(photo, channels=self.NUMBER_OF_CHANNELS)

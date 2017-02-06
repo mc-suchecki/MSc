@@ -21,6 +21,7 @@ stars_views_log_ratio_list = []
 # line in the list file looks like: ID, stars, views, width, height
 photos_count = 0
 zero_stars_photos_count = 0
+photos_above_threshold = 0
 for line in photos_list:
   photos_count += 1
   photo_metadata_array = line.split(',')
@@ -37,9 +38,11 @@ for line in photos_list:
   stars_views_ratio_list.append(stars_views_ratio)
   stars_views_log_ratio_list.append(log((stars + 1) / (views + 1), 2))
   zero_stars_photos_count += 1 if stars == 0 else 0
+  photos_above_threshold += 1
 
 # print some basic information
 print('Analyzed {} photos.'.format(photos_count))
+print('{} photos left after deleting those with less than {} views.'.format(photos_above_threshold, VIEWS_THRESHOLD))
 
 print('Stars stats:')
 print('{}% of photos have 0 stars.'.format((zero_stars_photos_count / photos_count) * 100))
@@ -72,7 +75,7 @@ print('95% photos have score of less than {}.'.format(numpy.percentile(stars_vie
 
 # plot the data using histograms
 fig, axes = pyplot.subplots(nrows=2, ncols=3, sharex=False, sharey=False)
-fig.suptitle("Statistics for {} photos with {} views threshold".format(photos_count, VIEWS_THRESHOLD))
+fig.suptitle("Statistics for {} photos with {} views threshold".format(photos_above_threshold, VIEWS_THRESHOLD))
 axes[0][0].set_ylabel('Number of photos')
 axes[0][1].set_ylabel('Number of photos')
 axes[0][2].set_ylabel('Number of photos')
