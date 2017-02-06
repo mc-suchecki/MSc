@@ -48,7 +48,7 @@ def get_photo_favorites(photo_id):
     try:
       fav_result = flickr.photos.getFavorites(api_key=api_key, photo_id=photo_id, format='parsed-json')
       return fav_result['photo']['total']
-    except requests.exceptions.ConnectionError:
+    except (requests.exceptions.ConnectionError, KeyError):
       print('Downloading stars for photo #' + photo_id + ' failed! Retrying...')
       time.sleep(2)
       continue
@@ -71,13 +71,18 @@ def save_flickr_photo_to_disk(photo_info):
   # save the photo ID to a list along with additional data
   try:
     favorites = get_photo_favorites(photo_id)
-    # getFavorites sometimes throws 'error 1: Photo not found' even though photo exists...
   except flickrapi.exceptions.FlickrError:
+    # getFavorites sometimes throws 'error 1: Photo not found' even though photo exists...
     print("Skipping photo #{}, getting stars count failed...".format(photo_id))
     return
   views = photo_info['views']
-  with Image.open(file_name) as photo_file:
-    width, height = photo_file.size
+  try:
+    with Image.open(file_name) as photo_file:
+      width, height = photo_file.size
+  except OSError:
+    # sometimes we get OSError because downloaded image is not a proper JPEG file
+    print("Skipping photo #{}, reading image dimensions failed...".format(photo_id))
+    return
   with open(DOWNLOAD_LOCATION + 'list.txt', "a") as list_file:
     list_file.write(','.join([photo_id, favorites, str(views), str(width), str(height)]) + '\n')
 
