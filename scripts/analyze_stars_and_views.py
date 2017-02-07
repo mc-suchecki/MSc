@@ -6,7 +6,16 @@ import numpy
 # settings
 PHOTOS_LIST_LOCATION = '../data/list.txt'
 NUMBER_OF_BINS = 100
-VIEWS_THRESHOLD = 100
+VIEWS_THRESHOLD = 0
+DESIRED_WIDTH = 240
+DESIRED_HEIGHT = 180
+
+
+def is_photo_resolution_wrong(photo_metadata: list):
+  width = int(photo_metadata[3])
+  height = int(photo_metadata[4])
+  return width != DESIRED_WIDTH or height != DESIRED_HEIGHT
+
 
 # init
 photos_list = open(PHOTOS_LIST_LOCATION, 'r')
@@ -21,14 +30,14 @@ stars_views_log_ratio_list = []
 # line in the list file looks like: ID, stars, views, width, height
 photos_count = 0
 zero_stars_photos_count = 0
-photos_above_threshold = 0
+number_of_selected_photos = 0
 for line in photos_list:
   photos_count += 1
-  photo_metadata_array = line.split(',')
-  stars = int(photo_metadata_array[1])
-  views = int(photo_metadata_array[2])
-  # skip photos with views below certain threshold
-  if views < VIEWS_THRESHOLD:
+  photo_metadata_list = line.split(',')
+  stars = int(photo_metadata_list[1])
+  views = int(photo_metadata_list[2])
+  # skip photos with views below certain threshold or with inappropriate resolution
+  if views < VIEWS_THRESHOLD or is_photo_resolution_wrong(photo_metadata_list):
     continue
   stars_views_ratio = 0 if (views == 0) else (stars / views)
   stars_list.append(stars)
@@ -38,11 +47,13 @@ for line in photos_list:
   stars_views_ratio_list.append(stars_views_ratio)
   stars_views_log_ratio_list.append(log((stars + 1) / (views + 1), 2))
   zero_stars_photos_count += 1 if stars == 0 else 0
-  photos_above_threshold += 1
+  number_of_selected_photos += 1
 
 # print some basic information
 print('Analyzed {} photos.'.format(photos_count))
-print('{} photos left after deleting those with less than {} views.'.format(photos_above_threshold, VIEWS_THRESHOLD))
+print('{} photos left after (views > {}) and (resolution == {}x{}) selection.'.format(number_of_selected_photos,
+                                                                                      VIEWS_THRESHOLD, DESIRED_WIDTH,
+                                                                                      DESIRED_HEIGHT))
 
 print('Stars stats:')
 print('{}% of photos have 0 stars.'.format((zero_stars_photos_count / photos_count) * 100))
@@ -75,7 +86,7 @@ print('95% photos have score of less than {}.'.format(numpy.percentile(stars_vie
 
 # plot the data using histograms
 fig, axes = pyplot.subplots(nrows=2, ncols=3, sharex=False, sharey=False)
-fig.suptitle("Statistics for {} photos with {} views threshold".format(photos_above_threshold, VIEWS_THRESHOLD))
+fig.suptitle("Statistics for {} photos with {} views threshold".format(number_of_selected_photos, VIEWS_THRESHOLD))
 axes[0][0].set_ylabel('Number of photos')
 axes[0][1].set_ylabel('Number of photos')
 axes[0][2].set_ylabel('Number of photos')
