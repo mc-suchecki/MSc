@@ -12,7 +12,7 @@ TEST_DIRECTORY = '../data/test/'
 DESIRED_WIDTH = 240
 DESIRED_HEIGHT = 180
 VIEWS_THRESHOLD = 100
-AESTHETICS_SCORE_MEDIAN = -7.344295907915817  # calculated by other script
+AESTHETICS_SCORE_MEDIAN = -7.247927513443586  # calculated by other script
 
 
 # helpers

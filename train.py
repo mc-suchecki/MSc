@@ -14,7 +14,7 @@ LOG_DEVICE_PLACEMENT = False
 
 # training parameters
 TRAINING_BATCH_SIZE = 10
-TRAINING_ITERATIONS_LIMIT = 100
+TRAINING_ITERATIONS_LIMIT = 1000000000
 NUMBER_OF_EPOCHS = 10
 
 # evaluation parameters
@@ -47,7 +47,7 @@ def main(_):
 
   # training
   neural_network_model = NeuralNetworkModel()
-  training_set_predictions = neural_network_model.generate_simple_network_model(training_photo_batch)
+  training_set_predictions = neural_network_model.generate_oxford_network_model(training_photo_batch)
   training_label_batch = tf.Print(training_label_batch, [training_label_batch], message="Labels: ", summarize=10)
   # training_error = tf.nn.sigmoid_cross_entropy_with_logits(training_set_predictions, training_label_batch)
   # training_error = tf.reduce_mean(cross_entropy)
@@ -62,7 +62,7 @@ def main(_):
   training_accuracy = tf.reduce_mean(tf.cast(training_correct_prediction, tf.float32))
 
   # evaluating on validation set
-  validation_set_predictions = neural_network_model.generate_simple_network_model(validation_photo_batch, True)
+  validation_set_predictions = neural_network_model.generate_oxford_network_model(validation_photo_batch, True)
   validation_label_batch = tf.Print(validation_label_batch, [validation_label_batch], message="Labels: ", summarize=10)
   validation_correct_prediction = tf.equal(tf.round(validation_set_predictions), validation_label_batch)
   validation_accuracy = tf.reduce_mean(tf.cast(validation_correct_prediction, tf.float32))
@@ -71,7 +71,7 @@ def main(_):
   validation_error = tf.nn.l2_loss(tf.sub(validation_set_predictions, validation_label_batch))
 
   # evaluating on test set
-  test_set_predictions = neural_network_model.generate_simple_network_model(test_photo_batch, True)
+  test_set_predictions = neural_network_model.generate_oxford_network_model(test_photo_batch, True)
   test_correct_prediction = tf.equal(tf.round(test_set_predictions), test_label_batch)
   test_accuracy = tf.reduce_mean(tf.cast(test_correct_prediction, tf.float32))
 
@@ -93,8 +93,9 @@ def main(_):
   coord = tf.train.Coordinator()
   threads = tf.train.start_queue_runners(coord=coord)
   number_of_batches = flickr_dataset_loader.get_training_set_size() // TRAINING_BATCH_SIZE
-  for i in range(min(number_of_batches * NUMBER_OF_EPOCHS, TRAINING_ITERATIONS_LIMIT)):
-    print('Training with batch {}/{} (containing {} photos)...'.format(i + 1, number_of_batches, TRAINING_BATCH_SIZE))
+  number_of_iterations = min(number_of_batches * NUMBER_OF_EPOCHS, TRAINING_ITERATIONS_LIMIT)
+  for i in range(number_of_iterations):
+    print('Training with batch {}/{} (next {} photos)...'.format(i + 1, number_of_iterations, TRAINING_BATCH_SIZE))
     _, cross_entropy_result, training_accuracy_result = sess.run(
       [train_step, training_error_summary, training_accuracy_summary])
     training_writer.add_summary(training_accuracy_result, i)

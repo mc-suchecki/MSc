@@ -1,3 +1,4 @@
+import functools
 import tensorflow as tf
 
 
@@ -25,8 +26,10 @@ class NeuralNetworkModel(object):
       conv8 = self._convolutional_layer('12_convolution', conv7, 3, 512, reuse_variables)
       pool5 = tf.nn.max_pool(conv8, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME', name='13_pooling')
 
-      fc1 = self._fully_connected_layer('14_fully_connected', pool2, 4096, reuse_variables)
-      fc2 = self._fully_connected_layer('15_fully_connected', fc1, 4096, reuse_variables)
+      # fc1 = self._fully_connected_layer('14_fully_connected', pool5, 4096, reuse_variables)
+      # fc2 = self._fully_connected_layer('15_fully_connected', fc1, 4096, reuse_variables)
+      fc1 = self._fully_connected_layer('14_fully_connected', pool5, 384, reuse_variables)
+      fc2 = self._fully_connected_layer('15_fully_connected', fc1, 192, reuse_variables)
 
       output = self._output_layer(fc2, reuse_variables)
       output = tf.Print(output, [output], message="Last layer activations: ", summarize=10)
@@ -54,6 +57,7 @@ class NeuralNetworkModel(object):
 
   def _convolutional_layer(self, layer_name, input_tensor, filter_size, num_of_output_channels, reuse_variables):
     """ TODO comment this. """
+    print("Initializing layer {}...".format(layer_name))
     with tf.variable_scope(layer_name, reuse=reuse_variables) as scope:
       # last value in input tensor corresponds to the number of input channels in this layer
       input_channels = input_tensor.get_shape()[-1].value
@@ -71,6 +75,7 @@ class NeuralNetworkModel(object):
 
   def _fully_connected_layer(self, layer_name, input_tensor, num_of_outputs, reuse_variables):
     """ TODO comment this. """
+    print("Initializing layer {}...".format(layer_name))
     with tf.variable_scope(layer_name, reuse=reuse_variables) as scope:
       batch_size = input_tensor.get_shape()[0].value
       # flatten the tensor so that the output can be calculated by simple matrix multiplication
@@ -85,6 +90,7 @@ class NeuralNetworkModel(object):
 
   def _output_layer(self, input_tensor, reuse_variables):
     """ TODO comment this. """
+    print("Initializing output layer...")
     with tf.variable_scope('output_layer', reuse=reuse_variables) as scope:
       inputs_length = input_tensor.get_shape()[-1].value
       weights = self._create_variable('weights', [inputs_length, 1], stddev=1 / inputs_length, weight_decay=0.0)
@@ -99,6 +105,10 @@ class NeuralNetworkModel(object):
   def _create_variable(name, shape, stddev, weight_decay):
     """ Creates a TensorFlow variable, initializes it randomly and adds a weight decay for training purposes. """
     variable = tf.get_variable(name, shape, initializer=tf.truncated_normal_initializer(stddev=stddev))
+
+    # calculating memory taken like: shape1 x shape2 x ... x 4 (32 bit float takes 4 bytes of memory)
+    memory_allocated = functools.reduce(lambda x, y: x*y, shape) * 4 / 1024 / 1024
+    print("Approximately {} megabytes of memory will be allocated for variable {}.".format(memory_allocated, name))
 
     if weight_decay is not None:
       weight_decay = tf.mul(tf.nn.l2_loss(variable), weight_decay, name='weight_loss')
