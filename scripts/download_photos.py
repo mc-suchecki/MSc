@@ -59,8 +59,8 @@ def get_photo_upload_date(photo_id):
     try:
       info_result = flickr.photos.getInfo(api_key=api_key, photo_id=photo_id, format='parsed-json')
       return info_result['photo']['dateuploaded']
-    except (requests.exceptions.ConnectionError, KeyError):
-      print('Downloading stars for photo #' + photo_id + ' failed! retrying...')
+    except (requests.exceptions.ConnectionError, KeyError, flickrapi.FlickrError):
+      print('Downloading upload date for photo #' + photo_id + ' failed! retrying...')
       time.sleep(2)
       continue
 
@@ -125,7 +125,7 @@ with open('api_secret.txt') as file:
 flickr = flickrapi.FlickrAPI(api_key, api_secret)
 
 # Flickr returns only 4000 unique results, so we need to do multiple queries, here we go iterating by day
-min_upload_date = datetime.datetime(2012, 5, 25)
+min_upload_date = datetime.datetime(2012, 8, 28)
 while min_upload_date <= datetime.datetime.now():
   max_upload_date = min_upload_date + relativedelta(days=1)
 
