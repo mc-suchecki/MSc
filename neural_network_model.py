@@ -28,10 +28,11 @@ class NeuralNetworkModel(object):
 
       # fc1 = self._fully_connected_layer('14_fully_connected', pool5, 4096, reuse_variables)
       # fc2 = self._fully_connected_layer('15_fully_connected', fc1, 4096, reuse_variables)
-      fc1 = self._fully_connected_layer('14_fully_connected', pool5, 384, reuse_variables)
-      fc2 = self._fully_connected_layer('15_fully_connected', fc1, 192, reuse_variables)
+      fc1 = self._fully_connected_layer('14_fully_connected', pool5, 2048, reuse_variables)
+      fc2 = self._fully_connected_layer('15_fully_connected', fc1, 2048, reuse_variables)
+      fc3 = self._fully_connected_layer('16_fully_connected', fc2, 1000, reuse_variables)
 
-      output = self._output_layer(fc2, reuse_variables)
+      output = self._output_layer(fc3, reuse_variables)
       output = tf.Print(output, [output], message="Last layer activations: ", summarize=10)
 
     return output
@@ -91,13 +92,13 @@ class NeuralNetworkModel(object):
   def _output_layer(self, input_tensor, reuse_variables):
     """ TODO comment this. """
     print("Initializing output layer...")
-    with tf.variable_scope('output_layer', reuse=reuse_variables) as scope:
+    with tf.variable_scope('output_layer', reuse=reuse_variables):
       inputs_length = input_tensor.get_shape()[-1].value
       weights = self._create_variable('weights', [inputs_length, 1], stddev=1 / inputs_length, weight_decay=0.0)
-      # weights = tf.Print(weights, [weights], message="Output layer weights: ", summarize=192)
+      weights = tf.Print(weights, [weights], message="Output layer weights: ", summarize=192)
       biases = tf.get_variable('biases', [1], initializer=tf.constant_initializer(0.0))
-      # biases = tf.Print(biases, [biases], message="Output layer bias: ", summarize=1)
-      output = tf.sigmoid(tf.add(tf.matmul(input_tensor, weights), biases, name=scope.name))
+      biases = tf.Print(biases, [biases], message="Output layer bias: ", summarize=1)
+      output = tf.sigmoid(tf.add(tf.matmul(input_tensor, weights), biases, name='sigmoid'))
       self._generate_summary(output)
       return output
 

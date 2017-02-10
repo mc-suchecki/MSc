@@ -49,9 +49,9 @@ def main(_):
   neural_network_model = NeuralNetworkModel()
   training_set_predictions = neural_network_model.generate_oxford_network_model(training_photo_batch)
   training_label_batch = tf.Print(training_label_batch, [training_label_batch], message="Labels: ", summarize=10)
-  # training_error = tf.nn.sigmoid_cross_entropy_with_logits(training_set_predictions, training_label_batch)
-  # training_error = tf.reduce_mean(cross_entropy)
-  training_error = tf.nn.l2_loss(tf.sub(training_set_predictions, training_label_batch))
+  training_error = tf.reduce_mean(
+    tf.nn.sigmoid_cross_entropy_with_logits(training_set_predictions, training_label_batch))
+  # training_error = tf.nn.l2_loss(tf.sub(training_set_predictions, training_label_batch))
   training_error = tf.Print(training_error, [training_error], message="Error on the training batch: ", summarize=10)
   train_step = tf.train.AdamOptimizer().minimize(training_error)
 
@@ -66,9 +66,9 @@ def main(_):
   validation_label_batch = tf.Print(validation_label_batch, [validation_label_batch], message="Labels: ", summarize=10)
   validation_correct_prediction = tf.equal(tf.round(validation_set_predictions), validation_label_batch)
   validation_accuracy = tf.reduce_mean(tf.cast(validation_correct_prediction, tf.float32))
-  # validation_error = tf.reduce_mean(
-  #   tf.nn.sigmoid_cross_entropy_with_logits(validation_set_predictions, validation_label_batch))
-  validation_error = tf.nn.l2_loss(tf.sub(validation_set_predictions, validation_label_batch))
+  validation_error = tf.reduce_mean(
+    tf.nn.sigmoid_cross_entropy_with_logits(validation_set_predictions, validation_label_batch))
+  # validation_error = tf.nn.l2_loss(tf.sub(validation_set_predictions, validation_label_batch))
 
   # evaluating on test set
   test_set_predictions = neural_network_model.generate_oxford_network_model(test_photo_batch, True)
