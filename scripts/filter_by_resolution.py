@@ -1,7 +1,8 @@
 """Selects photos with given resolution and copies them to the desired folder, dividing into three sets."""
 from math import log
-from progress.bar import Bar
 from shutil import copyfile
+import pyprind
+import sys
 
 # settings
 SOURCE_DIRECTORY = '../data/'
@@ -35,6 +36,7 @@ def get_photo_score(photo_metadata: str):
 
 
 def is_photo_resolution_okay(photo_metadata: str):
+  """ Returns True if photo has proper resolution (defined in the settings at the beginning of the script). """
   width = int(photo_metadata.split(',')[3])
   height = int(photo_metadata.split(',')[4])
   return width == DESIRED_WIDTH and height == DESIRED_HEIGHT
@@ -52,13 +54,14 @@ with open(PHOTOS_LIST_FILE) as photos_list_file:
   print('{} photos left.'.format(len(photos_list)))
 
   # copy the photos
-  progress_bar = Bar('Copying photos...', max=len(photos_list))
+  print('Copying photos...')
+  progress_bar = pyprind.ProgBar(len(photos_list), stream=sys.stdout, width=100)
   photo_index = 0
   good_photos = 0
   bad_photos = 0
   for line in photos_list:
     photo_index += 1
-    progress_bar.next()
+    progress_bar.update()
     photo_data = line.split(',')
     photo_id = photo_data[0]
     photo_label = 0 if get_photo_score(line) < AESTHETICS_SCORE_MEDIAN else 1
@@ -69,7 +72,6 @@ with open(PHOTOS_LIST_FILE) as photos_list_file:
     with open(get_destination_directory(photo_index) + 'list.txt', "a") as destination_list_file:
       destination_list_file.write(','.join([photo_id, str(photo_label)]) + '\n')
 
-  progress_bar.finish()
   print('Copied ' + str(len(photos_list)) + ' photos.')
   print(
     'There were {} photos classified as aesthetically pleasing and {} not pleasing.'.format(good_photos, bad_photos))

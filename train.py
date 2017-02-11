@@ -79,8 +79,8 @@ def main(_):
   sess = tf.InteractiveSession(config=tf.ConfigProto(log_device_placement=LOG_DEVICE_PLACEMENT))
 
   # initialize TensorBoard
-  with tf.name_scope('input'):
-    input_images_summary = tf.summary.image('images', training_photo_batch, 20)
+  # with tf.name_scope('input'):
+  #   input_images_summary = tf.summary.image('images', training_photo_batch, 20)
   with tf.name_scope('evaluation'):
     training_accuracy_summary = tf.summary.scalar('Accuracy on the training set', training_accuracy)
     training_error_summary = tf.summary.scalar('Error on the training set', training_error)
