@@ -1,10 +1,11 @@
 """Displays a histogram for photos metadata - number of stars and views."""
+import datetime
 from math import log
 import matplotlib.pyplot as pyplot
 import numpy
 
 # settings
-PHOTOS_LIST_LOCATION = '../data/list.txt'
+PHOTOS_LIST_LOCATION = '../data/list2.txt'
 NUMBER_OF_BINS = 100
 VIEWS_THRESHOLD = 0
 DESIRED_WIDTH = 240
@@ -25,6 +26,7 @@ views_list = []
 views_log_list = []
 stars_views_ratio_list = []
 stars_views_log_ratio_list = []
+today_timestamp = int(datetime.date.today().strftime("%s"))
 
 # collect data about number of stars and views across the dataset
 # line in the list file looks like: ID, stars, views, width, height
@@ -36,14 +38,16 @@ for line in photos_list:
   photo_metadata_list = line.split(',')
   stars = int(photo_metadata_list[1])
   views = int(photo_metadata_list[2])
+  upload_date_timestamp = int(photo_metadata_list[5])
+  days_since_upload = abs(today_timestamp - upload_date_timestamp)/60/60/24
   # skip photos with views below certain threshold or with inappropriate resolution
   if views < VIEWS_THRESHOLD or is_photo_resolution_wrong(photo_metadata_list):
     continue
   stars_views_ratio = 0 if (views == 0) else (stars / views)
   stars_list.append(stars)
-  stars_log_list.append(log(stars + 1, 2))
+  stars_log_list.append(log((stars + 1)/days_since_upload, 2))
   views_list.append(views)
-  views_log_list.append(log(views + 1, 2))
+  views_log_list.append(log((views + 1)/days_since_upload, 2))
   stars_views_ratio_list.append(stars_views_ratio)
   stars_views_log_ratio_list.append(log((stars + 1) / (views + 1), 2))
   zero_stars_photos_count += 1 if stars == 0 else 0
