@@ -1,4 +1,5 @@
 """Selects photos with given resolution and copies them to the desired folder, dividing into three sets."""
+import datetime
 from math import log
 from shutil import copyfile
 import pyprind
@@ -6,14 +7,16 @@ import sys
 
 # settings
 SOURCE_DIRECTORY = '../data/'
-PHOTOS_LIST_FILE = SOURCE_DIRECTORY + 'list.txt'
+PHOTOS_LIST_FILE = SOURCE_DIRECTORY + 'list2.txt'
 TRAINING_DIRECTORY = '../data/train/'
 VALIDATION_DIRECTORY = '../data/validation/'
 TEST_DIRECTORY = '../data/test/'
 DESIRED_WIDTH = 240
 DESIRED_HEIGHT = 180
-VIEWS_THRESHOLD = 100
+VIEWS_THRESHOLD = 0
 AESTHETICS_SCORE_MEDIAN = -7.247927513443586  # calculated by other script
+NORMALIZED_VIEWS_MEDIAN = -5.272835310139874  # calculated by other script
+today_timestamp = int(datetime.date.today().strftime("%s"))
 
 
 # helpers
@@ -31,7 +34,10 @@ def get_photo_score(photo_metadata: str):
   """ Returns photo 'score'. The higher the ratio, the better. """
   stars = int(photo_metadata.split(',')[1])
   views = int(photo_metadata.split(',')[2])
-  score = log((stars + 1) / (views + 1), 2)
+  upload_date_timestamp = int(photo_metadata.split(',')[5])
+  days_since_upload = abs(today_timestamp - upload_date_timestamp)/60/60/24
+  # score = log((stars + 1) / (views + 1), 2)
+  score = log((views + 1)/days_since_upload, 2)
   return score
 
 
@@ -64,7 +70,7 @@ with open(PHOTOS_LIST_FILE) as photos_list_file:
     progress_bar.update()
     photo_data = line.split(',')
     photo_id = photo_data[0]
-    photo_label = 0 if get_photo_score(line) < AESTHETICS_SCORE_MEDIAN else 1
+    photo_label = 0 if get_photo_score(line) < NORMALIZED_VIEWS_MEDIAN else 1
     good_photos += photo_label
     bad_photos += 0 if photo_label == 1 else 1
     photo_file_name = photo_id + '.jpg'
