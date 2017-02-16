@@ -97,3 +97,6 @@ api_secret.txt
 
 # downloaded photos
 data/
+
+# TensorBoard
+tmp/
