@@ -34,6 +34,6 @@ mean = numpy.array(numpy.round(mean), dtype=numpy.uint8)
 # generate, save and preview final image
 numpy.save(SOURCE_DIR + "mean.npy", mean)
 mean_image = Image.fromarray(mean, mode="RGB")
-mean_image.save("mean.jpg")
+mean_image.save(SOURCE_DIR + "mean.jpg")
 mean_image.show()
 print("Done.")

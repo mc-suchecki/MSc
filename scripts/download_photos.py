@@ -125,7 +125,7 @@ with open('api_secret.txt') as file:
 flickr = flickrapi.FlickrAPI(api_key, api_secret)
 
 # Flickr returns only 4000 unique results, so we need to do multiple queries, here we go iterating by day
-min_upload_date = datetime.datetime(2012, 8, 28)
+min_upload_date = datetime.datetime(2013, 4, 23)
 while min_upload_date <= datetime.datetime.now():
   max_upload_date = min_upload_date + relativedelta(days=1)
 
