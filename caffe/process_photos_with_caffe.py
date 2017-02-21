@@ -68,8 +68,8 @@ with open(PHOTOS_LIST_LOCATION) as photos_list_file:
     output = net.forward()
 
     # save the activations of last fully connected layer and appropriate labels
-    training_examples.append(net.blobs['fc8'].data[0])
+    training_examples.append(net.blobs['fc7'].data[0])
     training_labels.append(photo_label)
 
-numpy.save(PHOTOS_LOCATION + 'X.npy', training_examples)
+numpy.save(PHOTOS_LOCATION + 'X_fc7.npy', training_examples)
 numpy.save(PHOTOS_LOCATION + 'y.npy', training_labels)
