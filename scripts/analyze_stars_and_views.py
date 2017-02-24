@@ -5,7 +5,7 @@ import matplotlib.pyplot as pyplot
 import numpy
 
 # settings
-PHOTOS_LIST_LOCATION = '../data/list.txt'
+PHOTOS_LIST_LOCATION = '/media/p307k07/hdd/MSc/data/list.txt'
 NUMBER_OF_BINS = 100
 VIEWS_THRESHOLD = 0
 DESIRED_WIDTH = 240

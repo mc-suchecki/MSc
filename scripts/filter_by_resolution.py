@@ -2,19 +2,23 @@
 import datetime
 from math import log
 from shutil import copyfile
+
+import itertools
 import pyprind
 import sys
 
 # settings
-SOURCE_DIRECTORY = '../data/'
-PHOTOS_LIST_FILE = SOURCE_DIRECTORY + 'list2.txt'
+SOURCE_DIRECTORY = '/media/p307k07/hdd/MSc/data/'
+PHOTOS_LIST_FILE = SOURCE_DIRECTORY + 'list.txt'
 TRAINING_DIRECTORY = '../data/train/'
 VALIDATION_DIRECTORY = '../data/validation/'
 TEST_DIRECTORY = '../data/test/'
 DESIRED_WIDTH = 240
 DESIRED_HEIGHT = 180
 VIEWS_THRESHOLD = 0
-AESTHETICS_SCORE_MEDIAN = -7.247927513443586  # calculated by other script
+DESIRED_PRECENTAGE_OF_HIGH_QUALITY_PHOTOS = 20
+DESIRED_PRECENTAGE_OF_LOW_QUALITY_PHOTOS = 20
+# AESTHETICS_SCORE_MEDIAN = -7.247927513443586  # calculated by other script
 NORMALIZED_VIEWS_MEDIAN = -5.272835310139874  # calculated by other script
 today_timestamp = int(datetime.date.today().strftime("%s"))
 
@@ -58,6 +62,16 @@ with open(PHOTOS_LIST_FILE) as photos_list_file:
   print('Removing the photos with less than {} views...'.format(VIEWS_THRESHOLD))
   photos_list = [photo for photo in photos_list if int(photo.split(',')[2]) >= VIEWS_THRESHOLD]
   print('{} photos left.'.format(len(photos_list)))
+  print('Sorting the photos by score...')
+  photos_list.sort(key=get_photo_score)
+  print('Getting {}% best photos by score...'.format(DESIRED_PRECENTAGE_OF_HIGH_QUALITY_PHOTOS))
+  number_of_best_photos = round(len(photos_list) * DESIRED_PRECENTAGE_OF_HIGH_QUALITY_PHOTOS / 100)
+  best_photos_list = photos_list[:number_of_best_photos]
+  print('Got {} best photos.'.format(len(best_photos_list)))
+  print('Getting {}% worst photos by score...'.format(DESIRED_PRECENTAGE_OF_LOW_QUALITY_PHOTOS))
+  number_of_worst_photos = round(len(photos_list) * DESIRED_PRECENTAGE_OF_LOW_QUALITY_PHOTOS / 100)
+  worst_photos_list = photos_list[-number_of_worst_photos:]
+  print('Got {} worst photos.'.format(len(worst_photos_list)))
 
   # copy the photos
   print('Copying photos...')
@@ -65,7 +79,9 @@ with open(PHOTOS_LIST_FILE) as photos_list_file:
   photo_index = 0
   good_photos = 0
   bad_photos = 0
-  for line in photos_list:
+  iters = [iter(best_photos_list), iter(worst_photos_list)]
+  for it in itertools.cycle(iters):
+    line = next(it)
     photo_index += 1
     progress_bar.update()
     photo_data = line.split(',')
