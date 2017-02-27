@@ -16,7 +16,7 @@ import time
 # TODO better way to avoid pictures not being photos
 
 # settings
-DOWNLOAD_LOCATION = '../data/'
+DOWNLOAD_LOCATION = '/media/p307k07/hdd/MSc/data/'
 POOL_SIZE = 20  # number of subprocesses to spawn while downloading photos
 PAGE_SIZE = 500  # Flickr allows maximum 500 photos per page
 TAGS = ','.join(['landscape', 'portrait', 'architecture', 'macro', 'street', 'travel', 'nature', 'wildlife', 'night',
@@ -125,8 +125,8 @@ with open('api_secret.txt') as file:
 flickr = flickrapi.FlickrAPI(api_key, api_secret)
 
 # Flickr returns only 4000 unique results, so we need to do multiple queries, here we go iterating by day
-min_upload_date = datetime.datetime(2013, 4, 23)
-while min_upload_date <= datetime.datetime.now():
+min_upload_date = datetime.datetime(2014, 10, 13)
+while min_upload_date <= datetime.datetime(2015, 1, 1):
   max_upload_date = min_upload_date + relativedelta(days=1)
 
   # retry the query until we get the last page of the results
