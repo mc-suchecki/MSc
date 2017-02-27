@@ -8,10 +8,11 @@ from shutil import copyfile
 
 # settings
 SOURCE_DIRECTORY = '/media/p307k07/hdd/MSc/data/'
+DESTINATION_DIRECTORY = '/media/p307k07/ssd/opt/msc/data'
 PHOTOS_LIST_FILE = SOURCE_DIRECTORY + 'list.txt'
-TRAINING_DIRECTORY = '../data/train/'
-VALIDATION_DIRECTORY = '../data/validation/'
-TEST_DIRECTORY = '../data/test/'
+TRAINING_DIRECTORY = DESTINATION_DIRECTORY + '/train/'
+VALIDATION_DIRECTORY = DESTINATION_DIRECTORY + '/validation/'
+TEST_DIRECTORY = DESTINATION_DIRECTORY + '/test/'
 DESIRED_WIDTH = 240
 DESIRED_HEIGHT = 159
 VIEWS_THRESHOLD = 0
