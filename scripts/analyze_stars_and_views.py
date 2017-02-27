@@ -3,13 +3,15 @@ import datetime
 from math import log
 import matplotlib.pyplot as pyplot
 import numpy
+import pyprind
+import sys
 
 # settings
 PHOTOS_LIST_LOCATION = '/media/p307k07/hdd/MSc/data/list.txt'
 NUMBER_OF_BINS = 100
 VIEWS_THRESHOLD = 0
 DESIRED_WIDTH = 240
-DESIRED_HEIGHT = 180
+DESIRED_HEIGHT = 159
 
 
 def is_photo_resolution_wrong(photo_metadata: list):
@@ -19,7 +21,6 @@ def is_photo_resolution_wrong(photo_metadata: list):
 
 
 # init
-photos_list = open(PHOTOS_LIST_LOCATION, 'r')
 stars_list = []
 stars_log_list = []
 views_list = []
@@ -30,28 +31,34 @@ today_timestamp = int(datetime.date.today().strftime("%s"))
 
 # collect data about number of stars and views across the dataset
 # line in the list file looks like: ID, stars, views, width, height
-photos_count = 0
-zero_stars_photos_count = 0
-number_of_selected_photos = 0
-for line in photos_list:
-  photos_count += 1
-  photo_metadata_list = line.split(',')
-  stars = int(photo_metadata_list[1])
-  views = int(photo_metadata_list[2])
-  upload_date_timestamp = int(photo_metadata_list[5])
-  days_since_upload = abs(today_timestamp - upload_date_timestamp)/60/60/24
-  # skip photos with views below certain threshold or with inappropriate resolution
-  if views < VIEWS_THRESHOLD or is_photo_resolution_wrong(photo_metadata_list):
-    continue
-  stars_views_ratio = 0 if (views == 0) else (stars / views)
-  stars_list.append(stars)
-  stars_log_list.append(log((stars + 1)/days_since_upload, 2))
-  views_list.append(views)
-  views_log_list.append(log((views + 1)/days_since_upload, 2))
-  stars_views_ratio_list.append(stars_views_ratio)
-  stars_views_log_ratio_list.append(log((stars + 1) / (views + 1), 2))
-  zero_stars_photos_count += 1 if stars == 0 else 0
-  number_of_selected_photos += 1
+with open(PHOTOS_LIST_LOCATION) as photos_list_file:
+  # filter the data
+  photos_list = photos_list_file.readlines()
+  photos_count = 0
+  zero_stars_photos_count = 0
+  number_of_selected_photos = 0
+  print('Calculating statistics...')
+  progress_bar = pyprind.ProgBar(len(photos_list), stream=sys.stdout, width=100)
+  for line in photos_list:
+    photos_count += 1
+    photo_metadata_list = line.split(',')
+    views = int(photo_metadata_list[2])
+    # skip photos with views below certain threshold or with inappropriate resolution
+    if views < VIEWS_THRESHOLD or is_photo_resolution_wrong(photo_metadata_list):
+      continue
+    upload_date_timestamp = int(photo_metadata_list[5])
+    days_since_upload = abs(today_timestamp - upload_date_timestamp)/60/60/24
+    stars = int(photo_metadata_list[1])
+    stars_views_ratio = 0 if (views == 0) else (stars / views)
+    stars_list.append(stars)
+    stars_log_list.append(log((stars + 1)/days_since_upload, 2))
+    views_list.append(views)
+    views_log_list.append(log((views + 1)/days_since_upload, 2))
+    stars_views_ratio_list.append(stars_views_ratio)
+    stars_views_log_ratio_list.append(log((stars + 1) / (views + 1), 2))
+    zero_stars_photos_count += 1 if stars == 0 else 0
+    number_of_selected_photos += 1
+    progress_bar.update()
 
 # print some basic information
 print('Analyzed {} photos.'.format(photos_count))
@@ -92,7 +99,7 @@ print('95% photos have score of less than {}.'.format(numpy.percentile(stars_vie
 
 # plot the data using histograms
 fig, axes = pyplot.subplots(nrows=2, ncols=3, sharex=False, sharey=False)
-fig.suptitle("Statistics for {} photos with {} views threshold".format(number_of_selected_photos, VIEWS_THRESHOLD))
+fig.suptitle('Statistics for {} photos with {} views threshold'.format(number_of_selected_photos, VIEWS_THRESHOLD))
 axes[0][0].set_ylabel('Number of photos')
 axes[0][1].set_ylabel('Number of photos')
 axes[0][2].set_ylabel('Number of photos')

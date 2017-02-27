@@ -1,11 +1,10 @@
 """Selects photos with given resolution and copies them to the desired folder, dividing into three sets."""
 import datetime
-from math import log
-from shutil import copyfile
-
 import itertools
 import pyprind
 import sys
+from math import log
+from shutil import copyfile
 
 # settings
 SOURCE_DIRECTORY = '/media/p307k07/hdd/MSc/data/'
@@ -14,33 +13,33 @@ TRAINING_DIRECTORY = '../data/train/'
 VALIDATION_DIRECTORY = '../data/validation/'
 TEST_DIRECTORY = '../data/test/'
 DESIRED_WIDTH = 240
-DESIRED_HEIGHT = 180
+DESIRED_HEIGHT = 159
 VIEWS_THRESHOLD = 0
-DESIRED_PRECENTAGE_OF_HIGH_QUALITY_PHOTOS = 20
-DESIRED_PRECENTAGE_OF_LOW_QUALITY_PHOTOS = 20
-# AESTHETICS_SCORE_MEDIAN = -7.247927513443586  # calculated by other script
-NORMALIZED_VIEWS_MEDIAN = -5.272835310139874  # calculated by other script
+DESIRED_PERCENTAGE_OF_HIGH_QUALITY_PHOTOS = 20
+DESIRED_PERCENTAGE_OF_LOW_QUALITY_PHOTOS = 20
+NORMALIZED_VIEWS_MEDIAN = -3.4784655369370743  # calculated by other script
 today_timestamp = int(datetime.date.today().strftime("%s"))
 
 
 # helpers
 def get_destination_directory(number):
   """Returns training dir for 3/4 cases, validation dir for 1/8 cases and test dir for 1/8 cases."""
-  if number % 2 == 0 or number % 4 == 1:
+  # we divide by 16 to ensure that validation and test datasets receive even number of photos
+  # we need the above because photos in the list are cycling like (good, bad, good, bad, ...)
+  remainder = number % 16
+  if 0 <= remainder <= 11:
     return TRAINING_DIRECTORY
-  elif number % 8 == 7:
+  elif remainder == 12 or remainder == 13:
     return VALIDATION_DIRECTORY
   else:
     return TEST_DIRECTORY
 
 
 def get_photo_score(photo_metadata: str):
-  """ Returns photo 'score'. The higher the ratio, the better. """
-  stars = int(photo_metadata.split(',')[1])
+  """ Returns photo 'score'. The higher the returned number, the better the photo. """
   views = int(photo_metadata.split(',')[2])
   upload_date_timestamp = int(photo_metadata.split(',')[5])
   days_since_upload = abs(today_timestamp - upload_date_timestamp)/60/60/24
-  # score = log((stars + 1) / (views + 1), 2)
   score = log((views + 1)/days_since_upload, 2)
   return score
 
@@ -63,14 +62,14 @@ with open(PHOTOS_LIST_FILE) as photos_list_file:
   photos_list = [photo for photo in photos_list if int(photo.split(',')[2]) >= VIEWS_THRESHOLD]
   print('{} photos left.'.format(len(photos_list)))
   print('Sorting the photos by score...')
-  photos_list.sort(key=get_photo_score)
-  print('Getting {}% best photos by score...'.format(DESIRED_PRECENTAGE_OF_HIGH_QUALITY_PHOTOS))
-  number_of_best_photos = round(len(photos_list) * DESIRED_PRECENTAGE_OF_HIGH_QUALITY_PHOTOS / 100)
+  photos_list.sort(key=get_photo_score, reverse=True)
+  print('Getting {}% best photos by score...'.format(DESIRED_PERCENTAGE_OF_HIGH_QUALITY_PHOTOS))
+  number_of_best_photos = round(len(photos_list) * DESIRED_PERCENTAGE_OF_HIGH_QUALITY_PHOTOS / 100)
   best_photos_list = photos_list[:number_of_best_photos]
   print('Got {} best photos.'.format(len(best_photos_list)))
-  print('Getting {}% worst photos by score...'.format(DESIRED_PRECENTAGE_OF_LOW_QUALITY_PHOTOS))
-  number_of_worst_photos = round(len(photos_list) * DESIRED_PRECENTAGE_OF_LOW_QUALITY_PHOTOS / 100)
-  worst_photos_list = photos_list[-number_of_worst_photos:]
+  print('Getting {}% worst photos by score...'.format(DESIRED_PERCENTAGE_OF_LOW_QUALITY_PHOTOS))
+  number_of_worst_photos = round(len(photos_list) * DESIRED_PERCENTAGE_OF_LOW_QUALITY_PHOTOS / 100)
+  worst_photos_list = (photos_list[-number_of_worst_photos:])[::-1]
   print('Got {} worst photos.'.format(len(worst_photos_list)))
 
   # copy the photos
@@ -79,11 +78,10 @@ with open(PHOTOS_LIST_FILE) as photos_list_file:
   photo_index = 0
   good_photos = 0
   bad_photos = 0
-  iters = [iter(best_photos_list), iter(worst_photos_list)]
-  for it in itertools.cycle(iters):
-    line = next(it)
+  iterators = [iter(best_photos_list), iter(worst_photos_list)]
+  for iterator in itertools.cycle(iterators):
+    line = next(iterator)
     photo_index += 1
-    progress_bar.update()
     photo_data = line.split(',')
     photo_id = photo_data[0]
     photo_label = 0 if get_photo_score(line) < NORMALIZED_VIEWS_MEDIAN else 1
@@ -91,8 +89,9 @@ with open(PHOTOS_LIST_FILE) as photos_list_file:
     bad_photos += 0 if photo_label == 1 else 1
     photo_file_name = photo_id + '.jpg'
     copyfile(SOURCE_DIRECTORY + photo_file_name, get_destination_directory(photo_index) + photo_file_name)
-    with open(get_destination_directory(photo_index) + 'list.txt', "a") as destination_list_file:
+    with open(get_destination_directory(photo_index) + 'list.txt', 'a') as destination_list_file:
       destination_list_file.write(','.join([photo_id, str(photo_label)]) + '\n')
+    progress_bar.update()
 
   print('Copied ' + str(len(photos_list)) + ' photos.')
   print(

@@ -84,7 +84,7 @@ def save_flickr_photo_to_disk(photo_info):
     favorites = get_photo_favorites(photo_id)
   except flickrapi.exceptions.FlickrError:
     # getFavorites sometimes throws 'error 1: Photo not found' even though photo exists...
-    print("Skipping photo #{}, getting stars count failed...".format(photo_id))
+    print('Skipping photo #{}, getting stars count failed...'.format(photo_id))
     return
   upload_date = get_photo_upload_date(photo_id)
   views = photo_info['views']
@@ -93,9 +93,9 @@ def save_flickr_photo_to_disk(photo_info):
       width, height = photo_file.size
   except OSError:
     # sometimes we get OSError because downloaded image is not a proper JPEG file
-    print("Skipping photo #{}, reading image dimensions failed...".format(photo_id))
+    print('Skipping photo #{}, reading image dimensions failed...'.format(photo_id))
     return
-  with open(DOWNLOAD_LOCATION + 'list.txt', "a") as list_file:
+  with open(DOWNLOAD_LOCATION + 'list.txt', 'a') as list_file:
     list_file.write(','.join([photo_id, favorites, str(views), str(width), str(height), str(upload_date)]) + '\n')
 
 
@@ -106,7 +106,7 @@ def search_photos(key, min_upload, max_upload, page):
                                     content_type=1, tags=TAGS, per_page=PAGE_SIZE, tag_mode='any', extras=EXTRAS,
                                     page=page, format='parsed-json')
     except flickrapi.exceptions.FlickrError:
-      print("Searching photos from {} failed, retrying...".format(min_upload.strftime('%m/%Y')))
+      print('Searching photos from {} failed, retrying...'.format(min_upload.strftime('%m/%Y')))
       time.sleep(2)
       continue
     break

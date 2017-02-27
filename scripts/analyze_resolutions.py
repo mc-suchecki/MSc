@@ -1,16 +1,19 @@
 """Displays a resolution breakdown - how many photos have a given resolution."""
 from sortedcontainers import SortedDict
 import pylab
+import pyprind
+import sys
 
 # settings
-SOURCE_DIRECTORY = '../data/'
+SOURCE_DIRECTORY = '/media/p307k07/hdd/MSc/data/'
 PHOTOS_LIST_FILE = SOURCE_DIRECTORY + 'list.txt'
-THRESHOLD = 2000
+THRESHOLD = 10000
 
 print('Calculating statistics...')
 occurrences = SortedDict()
 with open(PHOTOS_LIST_FILE) as photos_list_file:
   photos_list = photos_list_file.readlines()
+  progress_bar = pyprind.ProgBar(len(photos_list), stream=sys.stdout, width=100)
   for photo_metadata in photos_list:
     width = int(photo_metadata.split(',')[3])
     height = int(photo_metadata.split(',')[4])
@@ -22,6 +25,7 @@ with open(PHOTOS_LIST_FILE) as photos_list_file:
       occurrences[resolution_string] += 1
     else:
       occurrences[resolution_string] = 0
+    progress_bar.update()
 
 print('Removing values lower than threshold...')
 for key, value in list(occurrences.items()):
