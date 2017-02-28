@@ -8,9 +8,10 @@ sys.path.insert(0, CAFFE_ROOT + 'python/')
 import caffe
 
 # settings
-PHOTOS_LOCATION = '../data/train/'
+PHOTOS_LOCATION = '/media/p307k07/ssd/opt/msc/data/train/'
 PHOTOS_LIST_LOCATION = PHOTOS_LOCATION + 'list.txt'
 MEAN_FILE_LOCATION = PHOTOS_LOCATION + 'mean.npy'
+OUTPUT_LOCATION = '../data/train/'
 
 if os.path.isfile(CAFFE_ROOT + 'models/bvlc_reference_caffenet/bvlc_reference_caffenet.caffemodel'):
   print('Caffe model found.')
@@ -71,5 +72,5 @@ with open(PHOTOS_LIST_LOCATION) as photos_list_file:
     training_examples.append(net.blobs['fc7'].data[0])
     training_labels.append(photo_label)
 
-numpy.save(PHOTOS_LOCATION + 'X_fc7.npy', training_examples)
-numpy.save(PHOTOS_LOCATION + 'y.npy', training_labels)
+numpy.save(OUTPUT_LOCATION + 'X.npy', training_examples)
+numpy.save(OUTPUT_LOCATION + 'y.npy', training_labels)

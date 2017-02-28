@@ -4,7 +4,7 @@ import pyprind
 import sys
 from PIL import Image
 
-SOURCE_DIR = "../data/train/"
+SOURCE_DIR = '/media/p307k07/ssd/opt/msc/data/train/'
 
 # access all images in directory
 allfiles = os.listdir(SOURCE_DIR)
