@@ -3,12 +3,12 @@ from sklearn.externals import joblib
 
 # settings
 TEST_DATA_LOCATION = '../data/test/'
-EXAMPLES_FILE_NAME = 'X_fc8.npy'
+EXAMPLES_FILE_NAME = 'X.npy'
 LABELS_FILE_NAME = 'y.npy'
 
 # loading
 print("Loading the model...")
-model = joblib.load('./svm_medium_fc8_model.pkl')
+model = joblib.load('./random_forests_model.pkl')
 
 # testing
 print("Loading test data...")

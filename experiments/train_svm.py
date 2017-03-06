@@ -29,7 +29,7 @@ if __name__ == '__main__':
     print('Tuning hyper-parameters for {}'.format(score))
 
     # increasing cache size is recommended with large RAM
-    classifier = GridSearchCV(SVC(cache_size=512), TUNED_PARAMETERS, scoring=score, n_jobs=-1, verbose=3)
+    classifier = GridSearchCV(SVC(cache_size=512), TUNED_PARAMETERS, scoring=score, n_jobs=4, verbose=3)
     classifier.fit(X_train, y_train)
     print()
 

@@ -12,6 +12,7 @@ PHOTOS_LOCATION = '/media/p307k07/ssd/opt/msc/data/train/'
 PHOTOS_LIST_LOCATION = PHOTOS_LOCATION + 'list.txt'
 MEAN_FILE_LOCATION = PHOTOS_LOCATION + 'mean.npy'
 OUTPUT_LOCATION = '../data/train/'
+PHOTOS_LIMIT = 2**12
 
 if os.path.isfile(CAFFE_ROOT + 'models/bvlc_reference_caffenet/bvlc_reference_caffenet.caffemodel'):
   print('Caffe model found.')
@@ -21,7 +22,7 @@ else:
 caffe.set_device(0)
 caffe.set_mode_gpu()
 
-model_def = CAFFE_ROOT + 'models/bvlc_reference_caffenet/deploy.prototxt'
+model_def = CAFFE_ROOT + 'models/bvlc_reference_caffenet/deploy_modified.prototxt'
 model_weights = CAFFE_ROOT + 'models/bvlc_reference_caffenet/bvlc_reference_caffenet.caffemodel'
 
 net = caffe.Net(model_def,  # defines the structure of the model
@@ -52,8 +53,9 @@ training_examples = []
 training_labels = []
 with open(PHOTOS_LIST_LOCATION) as photos_list_file:
   photos_list = photos_list_file.readlines()
+  photos_list = photos_list[:PHOTOS_LIMIT]
 
-  print('Computing Caffe output for photos...')
+  print('Computing Caffe output for {} photos...'.format(len(photos_list)))
   progress_bar = pyprind.ProgBar(len(photos_list), stream=sys.stdout, width=100)
   for line in photos_list:
     progress_bar.update()
@@ -69,8 +71,8 @@ with open(PHOTOS_LIST_LOCATION) as photos_list_file:
     output = net.forward()
 
     # save the activations of last fully connected layer and appropriate labels
-    training_examples.append(net.blobs['fc7'].data[0])
-    training_labels.append(photo_label)
+    training_examples.append(net.blobs['fc6'].data[0].tolist())
+    training_labels.append(photo_label[0])
 
-numpy.save(OUTPUT_LOCATION + 'X.npy', training_examples)
-numpy.save(OUTPUT_LOCATION + 'y.npy', training_labels)
+numpy.save(OUTPUT_LOCATION + 'X_fc6_cut.npy', training_examples)
+numpy.save(OUTPUT_LOCATION + 'y_fc6_cut.npy', training_labels)
