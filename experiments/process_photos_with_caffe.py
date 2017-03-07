@@ -12,7 +12,7 @@ PHOTOS_LOCATION = '/media/p307k07/ssd/opt/msc/data/train/'
 PHOTOS_LIST_LOCATION = PHOTOS_LOCATION + 'list.txt'
 MEAN_FILE_LOCATION = PHOTOS_LOCATION + 'mean.npy'
 OUTPUT_LOCATION = '../data/train/'
-PHOTOS_LIMIT = 2**12
+PHOTOS_LIMIT = 2 ** 16
 
 if os.path.isfile(CAFFE_ROOT + 'models/bvlc_reference_caffenet/bvlc_reference_caffenet.caffemodel'):
   print('Caffe model found.')
@@ -53,7 +53,8 @@ training_examples = []
 training_labels = []
 with open(PHOTOS_LIST_LOCATION) as photos_list_file:
   photos_list = photos_list_file.readlines()
-  photos_list = photos_list[:PHOTOS_LIMIT]
+  if PHOTOS_LIMIT is not None:
+    photos_list = photos_list[:PHOTOS_LIMIT]
 
   print('Computing Caffe output for {} photos...'.format(len(photos_list)))
   progress_bar = pyprind.ProgBar(len(photos_list), stream=sys.stdout, width=100)
@@ -74,5 +75,13 @@ with open(PHOTOS_LIST_LOCATION) as photos_list_file:
     training_examples.append(net.blobs['fc6'].data[0].tolist())
     training_labels.append(photo_label[0])
 
-numpy.save(OUTPUT_LOCATION + 'X_fc6_cut.npy', training_examples)
-numpy.save(OUTPUT_LOCATION + 'y_fc6_cut.npy', training_labels)
+# saving the results
+if PHOTOS_LIMIT is not None:
+  file_name_suffix = '_fc6_no_relu_first_{}.npy'.format(PHOTOS_LIMIT)
+else:
+  file_name_suffix = '_fc6_no_relu_full.npy'
+print('Saving examples to {}...'.format(OUTPUT_LOCATION + 'X' + file_name_suffix))
+numpy.save(OUTPUT_LOCATION + 'X' + file_name_suffix, training_examples)
+print('Saving labels to {}...'.format(OUTPUT_LOCATION + 'y' + file_name_suffix))
+numpy.save(OUTPUT_LOCATION + 'y' + file_name_suffix, training_labels)
+print('Done.')
