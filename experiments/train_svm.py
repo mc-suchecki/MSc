@@ -8,11 +8,11 @@ from sklearn.externals import joblib
 # settings
 TRAIN_DATA_LOCATION = '../data/train/'
 TEST_DATA_LOCATION = '../data/test/'
-EXAMPLES_FILE_NAME = 'X_fc6_cut.npy'
-LABELS_FILE_NAME = 'y_fc6_cut.npy'
+EXAMPLES_FILE_NAME = 'X_fc6_no_relu_first_16384.npy'
+LABELS_FILE_NAME = 'y_fc6_no_relu_first_16384.npy'
 TUNED_PARAMETERS = [
-  {'kernel': ['linear'], 'C': [1, 10, 100, 1000]},
-  {'kernel': ['rbf'], 'gamma': [1e-2, 1e-3, 1e-4, 1e-5], 'C': [1, 10, 100, 1000]}
+  {'kernel': ['linear'], 'C': [0.1, 1, 10, 100]},
+  {'kernel': ['rbf'], 'gamma': [1e-4, 1e-5, 1e-6], 'C': [0.1, 1, 10]}
 ]
 SCORES = ['accuracy']
 
@@ -23,8 +23,8 @@ if __name__ == '__main__':
   y_train = numpy.load(TRAIN_DATA_LOCATION + LABELS_FILE_NAME)
   print('Training data: X shape is {}, y shape is {}'.format(X_train.shape, y_train.shape))
   print('Loading test data...')
-  X_test = numpy.load(TEST_DATA_LOCATION + EXAMPLES_FILE_NAME)
-  y_test = numpy.load(TEST_DATA_LOCATION + LABELS_FILE_NAME)
+  X_test = numpy.load(TEST_DATA_LOCATION + 'X_fc6_no_relu_first_16384.npy')
+  y_test = numpy.load(TEST_DATA_LOCATION + 'y_fc6_no_relu_first_16384.npy')
   print('Test data: X shape is {}, y shape is {}'.format(X_test.shape, y_test.shape))
   print()
 

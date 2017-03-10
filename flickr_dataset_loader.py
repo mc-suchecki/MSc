@@ -1,3 +1,4 @@
+import numpy
 import tensorflow as tf
 from tensorflow.python.framework import ops
 
@@ -8,7 +9,7 @@ class FlickrDatasetLoader(object):
   # photos metadata
   IMAGE_WIDTH = 240
   """ Width in pixels of the photos to import. Must be the same across all photos. """
-  IMAGE_HEIGHT = 180
+  IMAGE_HEIGHT = 159
   """ Height in pixels of the photos to import. Must be the same across all photos. Currently set to 180 pixels, as
       horizontal images with 4:3 aspect ratio are the most common ones. """
   NUMBER_OF_CHANNELS = 3
@@ -17,7 +18,7 @@ class FlickrDatasetLoader(object):
   """ Size of the training example. Equals to width * height * number of channels. """
 
   # information about the files location
-  SOURCE_DIR = './data/'
+  SOURCE_DIR = '/media/p307k07/ssd/opt/msc/data/'
   """ Location of the directory with the Flickr dataset. """
   TRAINING_IMAGES_DIR = SOURCE_DIR + 'train/'
   """ Relative location of the directory with the training set. """
@@ -27,6 +28,9 @@ class FlickrDatasetLoader(object):
   """ Relative location of the directory with the test set. """
   LIST_FILE_NAME = 'list.txt'
   """ Name of the file which contains a list of photos filenames with their labels for each dataset (train/cv/test). """
+  MEAN_IMAGE_FILE_NAME = 'mean.npy'
+  """ Name of the file which contains a NumPy array with mean values for each pixel for every photo in the appropriate
+  dataset. Used for normalization purposes. """
 
   def __init__(self):
     self.training_set_size = 0
@@ -57,7 +61,7 @@ class FlickrDatasetLoader(object):
   def _create_photo_and_label_batches(self, source_directory: str, batch_size: int):
     # TODO split this function into smaller functions
     # read the list of photo IDs and labels
-    photos_list = open(source_directory + self.LIST_FILE_NAME, 'r')
+    photos_list = open(source_directory + self.LIST_FILE_NAME)
     filenames_list = []
     labels_list = []
     # get lists of photo file names and labels
@@ -71,14 +75,18 @@ class FlickrDatasetLoader(object):
     filenames = tf.convert_to_tensor(filenames_list, dtype=tf.string)
     labels = tf.convert_to_tensor(labels_list, dtype=tf.float32)
     with ops.name_scope(None, 'load_input_data', [filenames, labels]):
+      # create a constant holding the mean values for every pixel
+      mean = tf.constant(numpy.load(source_directory + self.MEAN_IMAGE_FILE_NAME), dtype=tf.float32)
       # create queue with filenames and labels
       file_name, label = tf.train.slice_input_producer([filenames, labels], shuffle=True)
-      file_name = tf.Print(file_name, [file_name], message="Opening photo: ")
+      # file_name = tf.Print(file_name, [file_name], message="Opening photo: ")
       # convert filenames of photos to input vectors
       photo = tf.read_file(file_name)
       uint8_color_values = tf.image.decode_jpeg(photo, channels=self.NUMBER_OF_CHANNELS)
       uint8_color_values.set_shape([self.IMAGE_HEIGHT, self.IMAGE_WIDTH, self.NUMBER_OF_CHANNELS])
       float32_color_values = tf.to_float(uint8_color_values)
+      # subtract the mean (dataset normalization)
+      float32_color_values = float32_color_values - mean
       # slice the data into mini batches
       return tf.train.batch([float32_color_values, label], batch_size=batch_size), len(filenames_list)
 

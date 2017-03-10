@@ -33,7 +33,7 @@ class NeuralNetworkModel(object):
       fc3 = self._fully_connected_layer('16_fully_connected', fc2, 1000, reuse_variables)
 
       output = self._output_layer(fc3, reuse_variables)
-      output = tf.Print(output, [output], message="Last layer activations: ", summarize=10)
+      # output = tf.Print(output, [output], message="Last layer activations: ", summarize=10)
 
     return output
 
@@ -52,7 +52,7 @@ class NeuralNetworkModel(object):
       fc2 = self._fully_connected_layer('8_fully_connected', fc1, 192, reuse_variables)
 
       output = self._output_layer(fc2, reuse_variables)
-      output = tf.Print(output, [output], message="Last layer activations: ", summarize=10)
+      # output = tf.Print(output, [output], message="Last layer activations: ", summarize=10)
 
     return output
 
@@ -95,9 +95,9 @@ class NeuralNetworkModel(object):
     with tf.variable_scope('output_layer', reuse=reuse_variables):
       inputs_length = input_tensor.get_shape()[-1].value
       weights = self._create_variable('weights', [inputs_length, 1], stddev=1 / inputs_length, weight_decay=0.0)
-      weights = tf.Print(weights, [weights], message="Output layer weights: ", summarize=192)
+      # weights = tf.Print(weights, [weights], message="Output layer weights: ", summarize=192)
       biases = tf.get_variable('biases', [1], initializer=tf.constant_initializer(0.0))
-      biases = tf.Print(biases, [biases], message="Output layer bias: ", summarize=1)
+      # biases = tf.Print(biases, [biases], message="Output layer bias: ", summarize=1)
       output = tf.sigmoid(tf.add(tf.matmul(input_tensor, weights), biases, name='sigmoid'))
       self._generate_summary(output)
       return output

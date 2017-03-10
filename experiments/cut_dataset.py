@@ -3,16 +3,16 @@ import numpy
 FILES_EXTENSION = '.npy'
 TRAIN_DATA_LOCATION = '../data/train/'
 TEST_DATA_LOCATION = '../data/test/'
-EXAMPLES_FILE_NAME = 'X_fc6_no_relu'
-LABELS_FILE_NAME = 'y_fc6_no_relu'
-TRAINING_SET_SIZE = 2 ** 17
-TEST_SET_SIZE = 2 ** 15
+EXAMPLES_FILE_NAME = 'X_fc6_no_relu_first_65536'
+LABELS_FILE_NAME = 'y_fc6_no_relu_first_65536'
+TRAINING_SET_SIZE = 2 ** 14
+TEST_SET_SIZE = 2 ** 12
 TRAINING_SET_SUFFIX = '_first_' + str(TRAINING_SET_SIZE) + FILES_EXTENSION
 TEST_SET_SUFFIX = '_first_' + str(TEST_SET_SIZE) + FILES_EXTENSION
 
 print('Loading training data...')
-X_train = numpy.load(TRAIN_DATA_LOCATION + EXAMPLES_FILE_NAME)
-y_train = numpy.load(TRAIN_DATA_LOCATION + LABELS_FILE_NAME)
+X_train = numpy.load(TRAIN_DATA_LOCATION + EXAMPLES_FILE_NAME + FILES_EXTENSION)
+y_train = numpy.load(TRAIN_DATA_LOCATION + LABELS_FILE_NAME + FILES_EXTENSION)
 print('Training data: X shape is {}, y shape is {}'.format(X_train.shape, y_train.shape))
 
 print('Cutting training data...')
@@ -21,9 +21,9 @@ y_train = y_train[:TRAINING_SET_SIZE:1]
 print('Training data: X shape is {}, y shape is {}'.format(X_train.shape, y_train.shape))
 
 print('Saving training data...')
-numpy.save(TRAIN_DATA_LOCATION + EXAMPLES_FILE_NAME + TRAINING_SET_SUFFIX, X_train)
+numpy.save(TRAIN_DATA_LOCATION + 'X_fc6_no_relu' + TRAINING_SET_SUFFIX, X_train)
 print('Training examples saved to:' + TRAIN_DATA_LOCATION + EXAMPLES_FILE_NAME + TRAINING_SET_SUFFIX)
-numpy.save(TRAIN_DATA_LOCATION + LABELS_FILE_NAME + TRAINING_SET_SUFFIX, y_train)
+numpy.save(TRAIN_DATA_LOCATION + 'y_fc6_no_relu' + TRAINING_SET_SUFFIX, y_train)
 print('Training labels saved to:' + TRAIN_DATA_LOCATION + LABELS_FILE_NAME + TRAINING_SET_SUFFIX)
 
 print('Loading test data...')
