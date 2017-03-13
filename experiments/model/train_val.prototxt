@@ -10,9 +10,9 @@ layer {
     phase: TRAIN
   }
   image_data_param {
-    source: "/media/p307k07/ssd/opt/msc/data/train/list_caffe.txt"
+    source: "/media/p307k07/ssd/opt/msc/data/train/list_caffe_16384.txt"
     batch_size: 50
-    new_height: 169
+    new_height: 159
     new_width: 240
   }
   transform_param {
@@ -33,9 +33,9 @@ layer {
     phase: TEST
   }
   image_data_param {
-    source: "/home/p307k07/Code/MSc/MSc/data/test/list_caffe.txt"
+    source: "/media/p307k07/ssd/opt/msc/data/test/list_caffe_16384.txt"
     batch_size: 50
-    new_height: 169
+    new_height: 159
     new_width: 240
   }
   transform_param {
@@ -280,11 +280,11 @@ layer {
   bottom: "pool5"
   top: "fc6"
   param {
-    lr_mult: 1
+    lr_mult: 10
     decay_mult: 1
   }
   param {
-    lr_mult: 2
+    lr_mult: 20
     decay_mult: 0
   }
   inner_product_param {
@@ -318,13 +318,13 @@ layer {
   name: "fc7_msc"
   type: "InnerProduct"
   bottom: "fc6"
-  top: "fc7"
+  top: "fc7_msc"
   param {
-    lr_mult: 1
+    lr_mult: 10
     decay_mult: 1
   }
   param {
-    lr_mult: 2
+    lr_mult: 20
     decay_mult: 0
   }
   inner_product_param {
@@ -342,14 +342,14 @@ layer {
 layer {
   name: "relu7"
   type: "ReLU"
-  bottom: "fc7"
-  top: "fc7"
+  bottom: "fc7_msc"
+  top: "fc7_msc"
 }
 layer {
   name: "drop7"
   type: "Dropout"
-  bottom: "fc7"
-  top: "fc7"
+  bottom: "fc7_msc"
+  top: "fc7_msc"
   dropout_param {
     dropout_ratio: 0.5
   }
@@ -357,14 +357,14 @@ layer {
 layer {
   name: "fc8_msc"
   type: "InnerProduct"
-  bottom: "fc7"
+  bottom: "fc7_msc"
   top: "fc8_msc"
   param {
-    lr_mult: 1
+    lr_mult: 10
     decay_mult: 1
   }
   param {
-    lr_mult: 2
+    lr_mult: 20
     decay_mult: 0
   }
   inner_product_param {
