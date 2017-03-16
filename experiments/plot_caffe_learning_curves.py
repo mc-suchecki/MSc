@@ -15,15 +15,17 @@ def main(files):
   plt.style.use('ggplot')
   fig, ax1 = plt.subplots()
   ax2 = ax1.twinx()
-  ax1.set_xlabel('iteration')
-  ax1.set_ylabel('loss')
-  ax2.set_ylabel('accuracy %')
+  fig.suptitle('AlexNet training with learning rate = 0.001 and fixed convolutional layers', fontsize=20)
+  ax1.set_xlabel('Iteration number', fontsize=14)
+  ax1.set_ylabel('Loss', fontsize=14)
+  ax2.set_ylabel('Accuracy (%)', fontsize=14)
 
   for log_file in files:
     loss_iterations, losses, test_iterations, accuracies, test_losses = parse_log(log_file)
-    ax1.plot(loss_iterations, losses, color='y', label='Training set loss')
-    ax1.plot(test_iterations, test_losses, 'r', label='Test set loss')
-    ax2.plot(test_iterations, accuracies, 'b', label='Test set accuracy')
+    training_set_loss, = ax1.plot(loss_iterations, losses, color='y', label='Training set loss')
+    test_set_loss, = ax1.plot(test_iterations, test_losses, 'r', label='Test set loss')
+    test_set_accuracy, = ax2.plot(test_iterations, accuracies, 'b', label='Test set accuracy')
+    plt.legend(handles=[training_set_loss, test_set_loss, test_set_accuracy], loc='upper left')
 
   plt.show()
 

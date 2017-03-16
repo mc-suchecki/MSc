@@ -10,7 +10,7 @@ layer {
     phase: TRAIN
   }
   image_data_param {
-    source: "/media/p307k07/ssd/opt/msc/data/train/list_caffe_16384.txt"
+    source: "/media/p307k07/ssd/opt/msc/data/train/list_caffe.txt"
     batch_size: 50
     new_height: 159
     new_width: 240
@@ -33,7 +33,7 @@ layer {
     phase: TEST
   }
   image_data_param {
-    source: "/media/p307k07/ssd/opt/msc/data/test/list_caffe_16384.txt"
+    source: "/media/p307k07/ssd/opt/msc/data/test/list_caffe.txt"
     batch_size: 50
     new_height: 159
     new_width: 240
@@ -55,11 +55,11 @@ layer {
   bottom: "data_msc"
   top: "conv1"
   param {
-    lr_mult: 1
-    decay_mult: 1
+    lr_mult: 0 # (was 1)
+    decay_mult: 0 # (was 1)
   }
   param {
-    lr_mult: 2
+    lr_mult: 0 # (was 2)
     decay_mult: 0
   }
   convolution_param {
@@ -110,11 +110,11 @@ layer {
   bottom: "norm1"
   top: "conv2"
   param {
-    lr_mult: 1
-    decay_mult: 1
+    lr_mult: 0 # (was 1)
+    decay_mult: 0 # (was 1)
   }
   param {
-    lr_mult: 2
+    lr_mult: 0 # (was 2)
     decay_mult: 0
   }
   convolution_param {
@@ -166,11 +166,11 @@ layer {
   bottom: "norm2"
   top: "conv3"
   param {
-    lr_mult: 1
-    decay_mult: 1
+    lr_mult: 0 # (was 1)
+    decay_mult: 0.01 # (was 1)
   }
   param {
-    lr_mult: 2
+    lr_mult: 0 # (was 2)
     decay_mult: 0
   }
   convolution_param {
@@ -199,11 +199,11 @@ layer {
   bottom: "conv3"
   top: "conv4"
   param {
-    lr_mult: 1
-    decay_mult: 1
+    lr_mult: 0 # (was 1)
+    decay_mult: 0 # (was 1)
   }
   param {
-    lr_mult: 2
+    lr_mult: 0 # (was 2)
     decay_mult: 0
   }
   convolution_param {
@@ -233,11 +233,11 @@ layer {
   bottom: "conv4"
   top: "conv5"
   param {
-    lr_mult: 1
-    decay_mult: 1
+    lr_mult: 0 # (was 1)
+    decay_mult: 0 # (was 1)
   }
   param {
-    lr_mult: 2
+    lr_mult: 0 # (was 2)
     decay_mult: 0
   }
   convolution_param {
@@ -278,13 +278,13 @@ layer {
   name: "fc6_msc"
   type: "InnerProduct"
   bottom: "pool5"
-  top: "fc6"
+  top: "fc6_msc"
   param {
-    lr_mult: 10
+    lr_mult: 1
     decay_mult: 1
   }
   param {
-    lr_mult: 20
+    lr_mult: 2
     decay_mult: 0
   }
   inner_product_param {
@@ -302,14 +302,14 @@ layer {
 layer {
   name: "relu6"
   type: "ReLU"
-  bottom: "fc6"
-  top: "fc6"
+  bottom: "fc6_msc"
+  top: "fc6_msc"
 }
 layer {
   name: "drop6"
   type: "Dropout"
-  bottom: "fc6"
-  top: "fc6"
+  bottom: "fc6_msc"
+  top: "fc6_msc"
   dropout_param {
     dropout_ratio: 0.5
   }
@@ -317,14 +317,14 @@ layer {
 layer {
   name: "fc7_msc"
   type: "InnerProduct"
-  bottom: "fc6"
+  bottom: "fc6_msc"
   top: "fc7_msc"
   param {
-    lr_mult: 10
+    lr_mult: 1
     decay_mult: 1
   }
   param {
-    lr_mult: 20
+    lr_mult: 2
     decay_mult: 0
   }
   inner_product_param {
@@ -360,15 +360,15 @@ layer {
   bottom: "fc7_msc"
   top: "fc8_msc"
   param {
-    lr_mult: 10
+    lr_mult: 1
     decay_mult: 1
   }
   param {
-    lr_mult: 20
+    lr_mult: 2
     decay_mult: 0
   }
   inner_product_param {
-    num_output: 1
+    num_output: 2
     weight_filler {
       type: "gaussian"
       std: 0.01
@@ -393,7 +393,7 @@ layer {
 }
 layer {
   name: "loss_msc"
-  type: "SigmoidCrossEntropyLoss"
+  type: "SoftmaxWithLoss"
   bottom: "fc8_msc"
   bottom: "label_msc"
   top: "loss"
