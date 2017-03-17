@@ -2,7 +2,7 @@
 import numpy as np
 import re
 import click
-from matplotlib import pylab as plt
+from matplotlib import pylab
 
 
 @click.command()
@@ -12,10 +12,10 @@ def main(files):
   Parses passed log files and displays plots for losses and accuracy.
   :param files: paths to Caffe log files to parse
   """
-  plt.style.use('ggplot')
-  fig, ax1 = plt.subplots()
+  pylab.style.use('ggplot')
+  fig, ax1 = pylab.subplots()
   ax2 = ax1.twinx()
-  fig.suptitle('AlexNet training with learning rate = 0.001 and fixed convolutional layers', fontsize=20)
+  fig.suptitle('AlexNet training with learning rate = 0.001 and released convolutional layers', fontsize=20)
   ax1.set_xlabel('Iteration number', fontsize=14)
   ax1.set_ylabel('Loss', fontsize=14)
   ax2.set_ylabel('Accuracy (%)', fontsize=14)
@@ -25,9 +25,11 @@ def main(files):
     training_set_loss, = ax1.plot(loss_iterations, losses, color='y', label='Training set loss')
     test_set_loss, = ax1.plot(test_iterations, test_losses, 'r', label='Test set loss')
     test_set_accuracy, = ax2.plot(test_iterations, accuracies, 'b', label='Test set accuracy')
-    plt.legend(handles=[training_set_loss, test_set_loss, test_set_accuracy], loc='upper left')
+    pylab.legend(handles=[training_set_loss, test_set_loss, test_set_accuracy], loc='upper left')
 
-  plt.show()
+  ax1.set_ylim([0, 3])
+  ax2.set_ylim([50, 75])
+  pylab.show()
 
 
 def parse_log(log_file):
