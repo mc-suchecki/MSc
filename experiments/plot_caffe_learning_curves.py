@@ -1,4 +1,6 @@
 """ Parses passed log files and displays plots for losses and accuracy. """
+# import matplotlib  # fix for my laptop
+# matplotlib.use('TkAgg')  # fix for my laptop
 from matplotlib import pylab
 import click
 import math
@@ -7,7 +9,7 @@ import re
 
 # number of columns in the plot - every cell contains a graph concerning one training run
 # NOTE: should be bigger than 1 and less than number of files!
-COLUMNS = 2
+COLUMNS = 4
 
 
 @click.command()
@@ -21,20 +23,21 @@ def main(files):
 
   rows = math.ceil(len(files) / COLUMNS)
   figure, axes = pylab.subplots(rows, COLUMNS)
-  figure.suptitle('AlexNet training results - hyper-parameters optimization', fontsize=14)
+  # figure.suptitle('AlexNet training results - hyper-parameters optimization', fontsize=14)
+  figure.tight_layout()
 
   for index, filename in enumerate(files):
-    first_axis = axes[index // rows, index % rows]
+    first_axis = axes[index % rows, index // rows]
     second_axis = first_axis.twinx()
     loss_iterations, losses, test_iterations, accuracies, test_losses, title = parse_log(filename)
-    first_axis.set_title(title, fontsize=11)
+    first_axis.set_title(title, fontsize=6)
     # first_axis.set_xlabel('Iteration number', fontsize=10)
     first_axis.set_ylabel('Loss', fontsize=10)
     second_axis.set_ylabel('Accuracy (%)', fontsize=10)
     training_set_loss, = first_axis.plot(loss_iterations, losses, color='c', label='Training set loss')
     test_set_loss, = first_axis.plot(test_iterations, test_losses, 'b', label='Test set loss')
     test_set_accuracy, = second_axis.plot(test_iterations, accuracies, 'r', label='Test set accuracy')
-    pylab.legend(handles=[training_set_loss, test_set_loss, test_set_accuracy], loc='upper left', prop={'size': 8})
+    pylab.legend(handles=[training_set_loss, test_set_loss, test_set_accuracy], loc='upper left', prop={'size': 6})
     first_axis.set_ylim([0, 2])
     second_axis.set_ylim([50, 75])
     first_axis.set_xlim([0, 150000])
@@ -87,8 +90,8 @@ def parse_log(filename):
   weight_decay = re.findall(r"weight_decay: (.*)", log)[0]
   dropout_ratio = re.findall(r"dropout_ratio: (.*)", log)
   title = 'Training ran on: ' + filename.split('/')[-1].split('_')[0] + '. ' 'Best accuracy: ' + \
-          str(numpy.max(accuracies)) + '.\n' + 'Learning rate: ' + base_learning_rate + ', momentum: ' \
-          + momentum + ', weight decay: ' + weight_decay + ', dropout: ' + dropout_ratio[0] + ' (FC6) / ' + \
+          str(numpy.max(accuracies)) + '.\n' + 'LR: ' + base_learning_rate + ', momentum: ' \
+          + momentum + ', WD: ' + weight_decay + ', dropout: ' + dropout_ratio[0] + ' (FC6) / ' + \
           dropout_ratio[1] + ' (FC7).'
 
   return training_iterations, training_losses, test_iterations, accuracies, test_losses, title
