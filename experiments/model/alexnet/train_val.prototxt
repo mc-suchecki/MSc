@@ -55,11 +55,11 @@ layer {
   bottom: "data_msc"
   top: "conv1"
   param {
-    lr_mult: 0.1 # (was 1)
-    decay_mult: 0.1 # (was 1)
+    lr_mult: 1
+    decay_mult: 1
   }
   param {
-    lr_mult: 0.2 # (was 2)
+    lr_mult: 2
     decay_mult: 0
   }
   convolution_param {
@@ -78,8 +78,7 @@ layer {
 }
 layer {
   name: "relu1"
-  type: "ReLU"
-  # type: "Sigmoid"
+  type: "Sigmoid"
   bottom: "conv1"
   top: "conv1"
 }
@@ -111,11 +110,11 @@ layer {
   bottom: "norm1"
   top: "conv2"
   param {
-    lr_mult: 0.1 # (was 1)
-    decay_mult: 0.1 # (was 1)
+    lr_mult: 1
+    decay_mult: 1
   }
   param {
-    lr_mult: 0.2 # (was 2)
+    lr_mult: 2
     decay_mult: 0
   }
   convolution_param {
@@ -135,8 +134,7 @@ layer {
 }
 layer {
   name: "relu2"
-  type: "ReLU"
-  # type: "Sigmoid"
+  type: "Sigmoid"
   bottom: "conv2"
   top: "conv2"
 }
@@ -168,11 +166,11 @@ layer {
   bottom: "norm2"
   top: "conv3"
   param {
-    lr_mult: 0.1 # (was 1)
-    decay_mult: 0.1 # (was 1)
+    lr_mult: 1
+    decay_mult: 1
   }
   param {
-    lr_mult: 0.2 # (was 2)
+    lr_mult: 2
     decay_mult: 0
   }
   convolution_param {
@@ -191,8 +189,7 @@ layer {
 }
 layer {
   name: "relu3"
-  type: "ReLU"
-  # type: "Sigmoid"
+  type: "Sigmoid"
   bottom: "conv3"
   top: "conv3"
 }
@@ -202,11 +199,11 @@ layer {
   bottom: "conv3"
   top: "conv4"
   param {
-    lr_mult: 0.1 # (was 1)
-    decay_mult: 0.1 # (was 1)
+    lr_mult: 1
+    decay_mult: 1
   }
   param {
-    lr_mult: 0.2 # (was 2)
+    lr_mult: 2
     decay_mult: 0
   }
   convolution_param {
@@ -226,8 +223,7 @@ layer {
 }
 layer {
   name: "relu4"
-  type: "ReLU"
-  # type: "Sigmoid"
+  type: "Sigmoid"
   bottom: "conv4"
   top: "conv4"
 }
@@ -237,11 +233,11 @@ layer {
   bottom: "conv4"
   top: "conv5"
   param {
-    lr_mult: 0.1 # (was 1)
-    decay_mult: 0.1 # (was 1)
+    lr_mult: 1
+    decay_mult: 1
   }
   param {
-    lr_mult: 0.2 # (was 2)
+    lr_mult: 2
     decay_mult: 0
   }
   convolution_param {
@@ -261,8 +257,7 @@ layer {
 }
 layer {
   name: "relu5"
-  type: "ReLU"
-  # type: "Sigmoid"
+  type: "Sigmoid"
   bottom: "conv5"
   top: "conv5"
 }
@@ -306,8 +301,7 @@ layer {
 }
 layer {
   name: "relu6"
-  type: "ReLU"
-  # type: "Sigmoid"
+  type: "Sigmoid"
   bottom: "fc6_msc"
   top: "fc6_msc"
 }
@@ -347,8 +341,7 @@ layer {
 }
 layer {
   name: "relu7"
-  type: "ReLU"
-  # type: "Sigmoid"
+  type: "Sigmoid"
   bottom: "fc7_msc"
   top: "fc7_msc"
 }

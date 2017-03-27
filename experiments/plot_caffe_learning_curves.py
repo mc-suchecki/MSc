@@ -41,7 +41,7 @@ def main(files):
     test_set_loss, = first_axis.plot(test_iterations, test_losses, 'b', label='Test set loss')
     test_set_accuracy, = second_axis.plot(test_iterations, accuracies, 'r', label='Test set accuracy')
     pylab.legend(handles=[training_set_loss, test_set_loss, test_set_accuracy], loc='upper left', prop={'size': 6})
-    first_axis.set_ylim([0, 2])
+    first_axis.set_ylim([0, 2.5])
     second_axis.set_ylim([50, 75])
     first_axis.set_xlim([0, 150000])
 
