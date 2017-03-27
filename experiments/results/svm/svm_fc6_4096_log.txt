@@ -1,0 +1,51 @@
+Loading training data...
+Training data: X shape is (4096, 4096), y shape is (4096,)
+Loading test data...
+Test data: X shape is (1024, 4096), y shape is (1024,)
+
+Tuning hyper-parameters for accuracy
+Fitting 3 folds for each of 20 candidates, totalling 60 fits
+[Parallel(n_jobs=4)]: Done  24 tasks      | elapsed:  8.6min
+[Parallel(n_jobs=4)]: Done  60 out of  60 | elapsed: 25.0min finished
+
+Best parameters found on the training set:
+{'C': 1, 'kernel': 'linear'}
+
+Grid scores on the training set:
+
+0.725 (+/-0.040) for {'C': 1, 'kernel': 'linear'}
+0.725 (+/-0.040) for {'C': 10, 'kernel': 'linear'}
+0.725 (+/-0.040) for {'C': 100, 'kernel': 'linear'}
+0.725 (+/-0.040) for {'C': 1000, 'kernel': 'linear'}
+0.500 (+/-0.000) for {'gamma': 0.01, 'C': 1, 'kernel': 'rbf'}
+0.500 (+/-0.000) for {'gamma': 0.001, 'C': 1, 'kernel': 'rbf'}
+0.501 (+/-0.000) for {'gamma': 0.0001, 'C': 1, 'kernel': 'rbf'}
+0.654 (+/-0.046) for {'gamma': 1e-05, 'C': 1, 'kernel': 'rbf'}
+0.500 (+/-0.000) for {'gamma': 0.01, 'C': 10, 'kernel': 'rbf'}
+0.500 (+/-0.000) for {'gamma': 0.001, 'C': 10, 'kernel': 'rbf'}
+0.501 (+/-0.001) for {'gamma': 0.0001, 'C': 10, 'kernel': 'rbf'}
+0.668 (+/-0.047) for {'gamma': 1e-05, 'C': 10, 'kernel': 'rbf'}
+0.500 (+/-0.000) for {'gamma': 0.01, 'C': 100, 'kernel': 'rbf'}
+0.500 (+/-0.000) for {'gamma': 0.001, 'C': 100, 'kernel': 'rbf'}
+0.501 (+/-0.001) for {'gamma': 0.0001, 'C': 100, 'kernel': 'rbf'}
+0.668 (+/-0.047) for {'gamma': 1e-05, 'C': 100, 'kernel': 'rbf'}
+0.500 (+/-0.000) for {'gamma': 0.01, 'C': 1000, 'kernel': 'rbf'}
+0.500 (+/-0.000) for {'gamma': 0.001, 'C': 1000, 'kernel': 'rbf'}
+0.501 (+/-0.001) for {'gamma': 0.0001, 'C': 1000, 'kernel': 'rbf'}
+0.668 (+/-0.047) for {'gamma': 1e-05, 'C': 1000, 'kernel': 'rbf'}
+
+Classification report on the test set:
+             precision    recall  f1-score   support
+
+          0       0.75      0.70      0.72       512
+          1       0.72      0.77      0.74       512
+
+avg / total       0.73      0.73      0.73      1024
+
+
+Confusion matrix for the test set:
+[[356 156]
+ [120 392]]
+
+Saving the model...
+Model saved to ./results/svm_fc6_4096_model.pkl.

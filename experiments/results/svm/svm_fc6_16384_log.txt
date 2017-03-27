@@ -1,0 +1,44 @@
+Loading training data...
+Training data: X shape is (16384, 4096), y shape is (16384,)
+Loading test data...
+Test data: X shape is (16384, 4096), y shape is (16384,)
+
+Tuning hyper-parameters for accuracy
+Fitting 3 folds for each of 13 candidates, totalling 39 fits
+[Parallel(n_jobs=4)]: Done  24 tasks      | elapsed: 273.3min
+[Parallel(n_jobs=4)]: Done  39 out of  39 | elapsed: 362.2min finished
+
+Best parameters found on the training set:
+{'C': 10, 'kernel': 'rbf', 'gamma': 1e-06}
+
+Grid scores on the training set:
+
+0.682 (+/-0.004) for {'C': 0.1, 'kernel': 'linear'}
+0.682 (+/-0.004) for {'C': 1, 'kernel': 'linear'}
+0.682 (+/-0.004) for {'C': 10, 'kernel': 'linear'}
+0.682 (+/-0.004) for {'C': 100, 'kernel': 'linear'}
+0.500 (+/-0.000) for {'C': 0.1, 'kernel': 'rbf', 'gamma': 0.0001}
+0.559 (+/-0.016) for {'C': 0.1, 'kernel': 'rbf', 'gamma': 1e-05}
+0.769 (+/-0.034) for {'C': 0.1, 'kernel': 'rbf', 'gamma': 1e-06}
+0.507 (+/-0.001) for {'C': 1, 'kernel': 'rbf', 'gamma': 0.0001}
+0.713 (+/-0.049) for {'C': 1, 'kernel': 'rbf', 'gamma': 1e-05}
+0.801 (+/-0.019) for {'C': 1, 'kernel': 'rbf', 'gamma': 1e-06}
+0.508 (+/-0.002) for {'C': 10, 'kernel': 'rbf', 'gamma': 0.0001}
+0.728 (+/-0.052) for {'C': 10, 'kernel': 'rbf', 'gamma': 1e-05}
+0.803 (+/-0.022) for {'C': 10, 'kernel': 'rbf', 'gamma': 1e-06}
+
+Classification report on the test set:
+             precision    recall  f1-score   support
+
+          0       0.76      0.75      0.75      8192
+          1       0.75      0.77      0.76      8192
+
+avg / total       0.76      0.76      0.76     16384
+
+
+Confusion matrix for the test set:
+[[6115 2077]
+ [1906 6286]]
+
+Saving the model...
+Model saved to ./results/svm_fc6_16384_model.pkl.

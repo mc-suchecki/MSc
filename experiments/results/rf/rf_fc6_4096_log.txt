@@ -1,0 +1,21 @@
+Loading training data...
+Training data: X shape is (4096, 4096), y shape is (4096,)
+Loading test data...
+Test data: X shape is (1024, 4096), y shape is (1024,)
+
+Training random forests classifier...
+Classification report on the test set:
+             precision    recall  f1-score   support
+
+          0       0.71      0.77      0.74       512
+          1       0.75      0.68      0.71       512
+
+avg / total       0.73      0.73      0.72      1024
+
+
+Confusion matrix for the test set:
+[[396 116]
+ [165 347]]
+
+Saving the model...
+Model saved to ./results/rf_fc6_4096_model.pkl.
