@@ -21,16 +21,19 @@ def main(files):
   """
   pylab.style.use('ggplot')
 
+  print('Processing {} log files...'.format(len(files)))
   rows = math.ceil(len(files) / COLUMNS)
+  print('Resulting plot will have {} rows and {} columns.'.format(rows, COLUMNS))
   figure, axes = pylab.subplots(rows, COLUMNS)
   # figure.suptitle('AlexNet training results - hyper-parameters optimization', fontsize=14)
   figure.tight_layout()
 
   for index, filename in enumerate(files):
+    print('Creating plot ({},{}).'.format(index // rows, index % rows))
     first_axis = axes[index % rows, index // rows]
     second_axis = first_axis.twinx()
     loss_iterations, losses, test_iterations, accuracies, test_losses, title = parse_log(filename)
-    first_axis.set_title(title, fontsize=6)
+    first_axis.set_title(title, fontsize=8)
     # first_axis.set_xlabel('Iteration number', fontsize=10)
     first_axis.set_ylabel('Loss', fontsize=10)
     second_axis.set_ylabel('Accuracy (%)', fontsize=10)
@@ -86,13 +89,18 @@ def parse_log(filename):
 
   # get the hyper-parameters to create the title for given plot
   base_learning_rate = re.findall(r"base_lr: (.*)", log)[0]
+  learning_rate_multiplier = re.findall(r"lr_mult: (.*)", log)[0]
+  sigmoid_usages = re.findall(r"Sigmoid", log)
+  activation_function = 'ReLU' if len(sigmoid_usages) == 0 else 'Sigmoid'
   momentum = re.findall(r"momentum: (.*)", log)[0]
   weight_decay = re.findall(r"weight_decay: (.*)", log)[0]
   dropout_ratio = re.findall(r"dropout_ratio: (.*)", log)
-  title = 'Training ran on: ' + filename.split('/')[-1].split('_')[0] + '. ' 'Best accuracy: ' + \
-          str(numpy.max(accuracies)) + '.\n' + 'LR: ' + base_learning_rate + ', momentum: ' \
-          + momentum + ', WD: ' + weight_decay + ', dropout: ' + dropout_ratio[0] + ' (FC6) / ' + \
-          dropout_ratio[1] + ' (FC7).'
+  title = 'Date: ' + filename.split('/')[-1].split('_')[0] + ', activations: ' + activation_function \
+      + ', best accuracy: ' + str(numpy.max(accuracies)) + '.\n' \
+      + 'Base LR: ' + base_learning_rate + ', LR mult. for conv. layers: ' + learning_rate_multiplier \
+      + ', momentum: ' + momentum + '.\n' \
+      + 'Weight decay: ' + weight_decay \
+      + ', dropout ratios: ' + dropout_ratio[0] + ' (FC6 layer) / ' + dropout_ratio[1] + ' (FC7 layer).'
 
   return training_iterations, training_losses, test_iterations, accuracies, test_losses, title
 
