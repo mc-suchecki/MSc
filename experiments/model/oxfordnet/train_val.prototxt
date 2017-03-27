@@ -1,11 +1,11 @@
-name: "MCaffeNet"
+name: "MCOxfordNet"
 
 # input
 layer {
-  name: "data_msc"
+  name: "data"
   type: "ImageData"
-  top: "data_msc"
-  top: "label_msc"
+  top: "data"
+  top: "label"
   include {
     phase: TRAIN
   }
@@ -25,10 +25,10 @@ layer {
   }
 }
 layer {
-  name: "data_msc"
+  name: "data"
   type: "ImageData"
-  top: "data_msc"
-  top: "label_msc"
+  top: "data"
+  top: "label"
   include {
     phase: TEST
   }
@@ -48,24 +48,24 @@ layer {
   }
 }
 
-# convolutions
+################################# conv3-64
 layer {
   name: "conv1"
   type: "Convolution"
-  bottom: "data_msc"
+  bottom: "data"
   top: "conv1"
   param {
-    lr_mult: 0.01 # (was 1)
-    decay_mult: 0.01 # (was 1)
+    lr_mult: 1
+    decay_mult: 1
   }
   param {
-    lr_mult: 0.02 # (was 2)
+    lr_mult: 2
     decay_mult: 0
   }
   convolution_param {
-    num_output: 96
-    kernel_size: 11
-    stride: 4
+    num_output: 64
+    kernel_size: 3
+    stride: 1
     weight_filler {
       type: "gaussian"
       std: 0.01
@@ -82,6 +82,8 @@ layer {
   bottom: "conv1"
   top: "conv1"
 }
+
+################################# maxpool
 layer {
   name: "pool1"
   type: "Pooling"
@@ -89,39 +91,41 @@ layer {
   top: "pool1"
   pooling_param {
     pool: MAX
-    kernel_size: 3
+    kernel_size: 2
     stride: 2
   }
 }
-layer {
-  name: "norm1"
-  type: "LRN"
-  bottom: "pool1"
-  top: "norm1"
-  lrn_param {
-    local_size: 5
-    alpha: 0.0001
-    beta: 0.75
-  }
-}
+# layer {
+  # name: "norm1"
+  # type: "LRN"
+  # bottom: "pool1"
+  # top: "norm1"
+  # lrn_param {
+    # local_size: 5
+    # alpha: 0.0001
+    # beta: 0.75
+  # }
+# }
+
+################################# conv3-128
 layer {
   name: "conv2"
   type: "Convolution"
-  bottom: "norm1"
+  bottom: "pool1"
   top: "conv2"
   param {
-    lr_mult: 0.01 # (was 1)
-    decay_mult: 0.01 # (was 1)
+    lr_mult: 1
+    decay_mult: 1
   }
   param {
-    lr_mult: 0.02 # (was 2)
+    lr_mult: 2
     decay_mult: 0
   }
   convolution_param {
-    num_output: 256
-    pad: 2
-    kernel_size: 5
-    group: 2
+    num_output: 128
+    # pad: 2
+    kernel_size: 3
+    # group: 2
     weight_filler {
       type: "gaussian"
       std: 0.01
@@ -138,6 +142,8 @@ layer {
   bottom: "conv2"
   top: "conv2"
 }
+
+################################# maxpool
 layer {
   name: "pool2"
   type: "Pooling"
@@ -145,37 +151,39 @@ layer {
   top: "pool2"
   pooling_param {
     pool: MAX
-    kernel_size: 3
+    kernel_size: 2
     stride: 2
   }
 }
-layer {
-  name: "norm2"
-  type: "LRN"
-  bottom: "pool2"
-  top: "norm2"
-  lrn_param {
-    local_size: 5
-    alpha: 0.0001
-    beta: 0.75
-  }
-}
+# layer {
+  # name: "norm2"
+  # type: "LRN"
+  # bottom: "pool2"
+  # top: "norm2"
+  # lrn_param {
+    # local_size: 5
+    # alpha: 0.0001
+    # beta: 0.75
+  # }
+# }
+
+################################# conv3-256
 layer {
   name: "conv3"
   type: "Convolution"
-  bottom: "norm2"
+  bottom: "pool2"
   top: "conv3"
   param {
-    lr_mult: 0.01 # (was 1)
-    decay_mult: 0.01 # (was 1)
+    lr_mult: 1
+    decay_mult: 1
   }
   param {
-    lr_mult: 0.02 # (was 2)
+    lr_mult: 2
     decay_mult: 0
   }
   convolution_param {
-    num_output: 384
-    pad: 1
+    num_output: 256
+    # pad: 1
     kernel_size: 3
     weight_filler {
       type: "gaussian"
@@ -193,24 +201,26 @@ layer {
   bottom: "conv3"
   top: "conv3"
 }
+
+################################# conv3-256
 layer {
   name: "conv4"
   type: "Convolution"
   bottom: "conv3"
   top: "conv4"
   param {
-    lr_mult: 0.01 # (was 1)
-    decay_mult: 0.01 # (was 1)
+    lr_mult: 1
+    decay_mult: 1
   }
   param {
-    lr_mult: 0.02 # (was 2)
+    lr_mult: 2
     decay_mult: 0
   }
   convolution_param {
-    num_output: 384
-    pad: 1
+    num_output: 256
+    # pad: 1
     kernel_size: 3
-    group: 2
+    # group: 2
     weight_filler {
       type: "gaussian"
       std: 0.01
@@ -227,24 +237,39 @@ layer {
   bottom: "conv4"
   top: "conv4"
 }
+
+################################# maxpool
+layer {
+  name: "pool3"
+  type: "Pooling"
+  bottom: "conv4"
+  top: "pool3"
+  pooling_param {
+    pool: MAX
+    kernel_size: 2
+    stride: 2
+  }
+}
+
+################################# conv3-512
 layer {
   name: "conv5"
   type: "Convolution"
   bottom: "conv4"
   top: "conv5"
   param {
-    lr_mult: 0.01 # (was 1)
-    decay_mult: 0.01 # (was 1)
+    lr_mult: 1
+    decay_mult: 1
   }
   param {
-    lr_mult: 0.02 # (was 2)
+    lr_mult: 2
     decay_mult: 0
   }
   convolution_param {
-    num_output: 256
-    pad: 1
+    num_output: 512
+    # pad: 1
     kernel_size: 3
-    group: 2
+    # group: 2
     weight_filler {
       type: "gaussian"
       std: 0.01
@@ -261,24 +286,13 @@ layer {
   bottom: "conv5"
   top: "conv5"
 }
-layer {
-  name: "pool5"
-  type: "Pooling"
-  bottom: "conv5"
-  top: "pool5"
-  pooling_param {
-    pool: MAX
-    kernel_size: 3
-    stride: 2
-  }
-}
 
-# fully connected layers
+################################# conv3-512
 layer {
-  name: "fc6_msc"
-  type: "InnerProduct"
-  bottom: "pool5"
-  top: "fc6_msc"
+  name: "conv6"
+  type: "Convolution"
+  bottom: "conv5"
+  top: "conv6"
   param {
     lr_mult: 1
     decay_mult: 1
@@ -287,11 +301,14 @@ layer {
     lr_mult: 2
     decay_mult: 0
   }
-  inner_product_param {
-    num_output: 4096
+  convolution_param {
+    num_output: 512
+    # pad: 1
+    kernel_size: 3
+    # group: 2
     weight_filler {
       type: "gaussian"
-      std: 0.005
+      std: 0.01
     }
     bias_filler {
       type: "constant"
@@ -302,23 +319,114 @@ layer {
 layer {
   name: "relu6"
   type: "ReLU"
-  bottom: "fc6_msc"
-  top: "fc6_msc"
+  bottom: "conv6"
+  top: "conv6"
 }
+
+################################# maxpool
 layer {
-  name: "drop6"
-  type: "Dropout"
-  bottom: "fc6_msc"
-  top: "fc6_msc"
-  dropout_param {
-    dropout_ratio: 0.5
+  name: "pool4"
+  type: "Pooling"
+  bottom: "conv6"
+  top: "pool4"
+  pooling_param {
+    pool: MAX
+    kernel_size: 2
+    stride: 2
+  }
+}
+
+################################# conv3-512
+layer {
+  name: "conv7"
+  type: "Convolution"
+  bottom: "pool4"
+  top: "conv7"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 512
+    # pad: 1
+    kernel_size: 3
+    # group: 2
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
+    bias_filler {
+      type: "constant"
+      value: 1
+    }
   }
 }
 layer {
-  name: "fc7_msc"
+  name: "relu7"
+  type: "ReLU"
+  bottom: "conv7"
+  top: "conv7"
+}
+
+################################# conv3-512
+layer {
+  name: "conv8"
+  type: "Convolution"
+  bottom: "conv7"
+  top: "conv8"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 512
+    # pad: 1
+    kernel_size: 3
+    # group: 2
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
+    bias_filler {
+      type: "constant"
+      value: 1
+    }
+  }
+}
+layer {
+  name: "relu8"
+  type: "ReLU"
+  bottom: "conv8"
+  top: "conv8"
+}
+
+################################# maxpool
+layer {
+  name: "pool5"
+  type: "Pooling"
+  bottom: "conv8"
+  top: "pool5"
+  pooling_param {
+    pool: MAX
+    kernel_size: 2
+    stride: 2
+  }
+}
+
+# fully connected layers
+layer {
+  name: "fc9"
   type: "InnerProduct"
-  bottom: "fc6_msc"
-  top: "fc7_msc"
+  bottom: "pool5"
+  top: "fc9"
   param {
     lr_mult: 1
     decay_mult: 1
@@ -340,25 +448,65 @@ layer {
   }
 }
 layer {
-  name: "relu7"
+  name: "relu9"
   type: "ReLU"
-  bottom: "fc7_msc"
-  top: "fc7_msc"
+  bottom: "fc9"
+  top: "fc9"
+}
+# layer {
+  # name: "drop9"
+  # type: "Dropout"
+  # bottom: "fc9"
+  # top: "fc9"
+  # dropout_param {
+    # dropout_ratio: 0.5
+  # }
+# }
+layer {
+  name: "fc10"
+  type: "InnerProduct"
+  bottom: "fc9"
+  top: "fc10"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  inner_product_param {
+    num_output: 4096
+    weight_filler {
+      type: "gaussian"
+      std: 0.005
+    }
+    bias_filler {
+      type: "constant"
+      value: 1
+    }
+  }
 }
 layer {
-  name: "drop7"
+  name: "relu10"
+  type: "ReLU"
+  bottom: "fc10"
+  top: "fc10"
+}
+layer {
+  name: "drop10"
   type: "Dropout"
-  bottom: "fc7_msc"
-  top: "fc7_msc"
+  bottom: "fc10"
+  top: "fc10"
   dropout_param {
     dropout_ratio: 0.5
   }
 }
 layer {
-  name: "fc8_msc"
+  name: "fc11"
   type: "InnerProduct"
-  bottom: "fc7_msc"
-  top: "fc8_msc"
+  bottom: "fc10"
+  top: "fc11"
   param {
     lr_mult: 1
     decay_mult: 1
@@ -384,17 +532,17 @@ layer {
 layer {
   name: "accuracy"
   type: "Accuracy"
-  bottom: "fc8_msc"
-  bottom: "label_msc"
+  bottom: "fc11"
+  bottom: "label"
   top: "accuracy"
   include {
     phase: TEST
   }
 }
 layer {
-  name: "loss_msc"
+  name: "loss"
   type: "SoftmaxWithLoss"
-  bottom: "fc8_msc"
-  bottom: "label_msc"
+  bottom: "fc11"
+  bottom: "label"
   top: "loss"
 }
