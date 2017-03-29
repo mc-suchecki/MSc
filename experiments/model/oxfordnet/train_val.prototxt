@@ -11,7 +11,7 @@ layer {
   }
   image_data_param {
     source: "/media/p307k07/ssd/opt/msc/data/train/list_caffe.txt"
-    batch_size: 50
+    batch_size: 5
     new_height: 159
     new_width: 240
   }
@@ -34,7 +34,7 @@ layer {
   }
   image_data_param {
     source: "/media/p307k07/ssd/opt/msc/data/test/list_caffe.txt"
-    batch_size: 50
+    batch_size: 5
     new_height: 159
     new_width: 240
   }
@@ -255,7 +255,7 @@ layer {
 layer {
   name: "conv5"
   type: "Convolution"
-  bottom: "conv4"
+  bottom: "pool3"
   top: "conv5"
   param {
     lr_mult: 1
@@ -493,15 +493,15 @@ layer {
   bottom: "fc10"
   top: "fc10"
 }
-layer {
-  name: "drop10"
-  type: "Dropout"
-  bottom: "fc10"
-  top: "fc10"
-  dropout_param {
-    dropout_ratio: 0.5
-  }
-}
+# layer {
+  # name: "drop10"
+  # type: "Dropout"
+  # bottom: "fc10"
+  # top: "fc10"
+  # dropout_param {
+    # dropout_ratio: 0.5
+  # }
+# }
 layer {
   name: "fc11"
   type: "InnerProduct"

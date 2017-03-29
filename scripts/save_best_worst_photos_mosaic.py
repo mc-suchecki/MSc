@@ -1,7 +1,7 @@
 from PIL import Image
 
 # settings
-PHOTOS_LOCATION = '../data/validation/'
+PHOTOS_LOCATION = '/media/p307k07/ssd/opt/msc/data/train/'
 PHOTOS_LIST_FILE = PHOTOS_LOCATION + 'list.txt'
 PHOTOS_WIDTH = 240
 PHOTOS_HEIGHT = 159

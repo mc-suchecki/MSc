@@ -33,7 +33,7 @@ def main(files):
     first_axis = axes[index % rows, index // rows]
     second_axis = first_axis.twinx()
     loss_iterations, losses, test_iterations, accuracies, test_losses, title = parse_log(filename)
-    first_axis.set_title(title, fontsize=8)
+    first_axis.set_title(title, fontsize=9)
     # first_axis.set_xlabel('Iteration number', fontsize=10)
     first_axis.set_ylabel('Loss', fontsize=10)
     second_axis.set_ylabel('Accuracy (%)', fontsize=10)

@@ -1,14 +1,14 @@
 net: "./model/oxfordnet/train_val.prototxt"
 test_iter: 1000
 test_interval: 1000
-base_lr: 0.001 # default was 0.01
+base_lr: 0.001
 lr_policy: "step"
 gamma: 0.1
-stepsize: 50000 # default was 100 000
+stepsize: 500000
 display: 20
-max_iter: 150000 # default was 350 000
+max_iter: 4500000
 momentum: 0.9
-weight_decay: 0.001 # default was 0.0005
-snapshot: 65000
-snapshot_prefix: "./results/alexnet_model"
+weight_decay: 0.001
+snapshot: 50000
+snapshot_prefix: "./results/oxfordnet_model"
 solver_mode: GPU
