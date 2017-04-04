@@ -3,6 +3,7 @@ import datetime
 import itertools
 import pyprind
 import sys
+import os
 from math import log
 from shutil import copyfile
 
@@ -85,13 +86,16 @@ with open(PHOTOS_LIST_FILE) as photos_list_file:
     photo_index += 1
     photo_data = line.split(',')
     photo_id = photo_data[0]
-    photo_label = 0 if get_photo_score(line) < NORMALIZED_VIEWS_MEDIAN else 1
+    # photo_label = 0 if get_photo_score(line) < NORMALIZED_VIEWS_MEDIAN else 1
+    photo_label = get_photo_score(line)
     good_photos += photo_label
     bad_photos += 0 if photo_label == 1 else 1
     photo_file_name = photo_id + '.jpg'
-    copyfile(SOURCE_DIRECTORY + photo_file_name, get_destination_directory(photo_index) + photo_file_name)
-    with open(get_destination_directory(photo_index) + 'list.txt', 'a') as destination_list_file:
-      destination_list_file.write(','.join([photo_id, str(photo_label)]) + '\n')
+    path = get_destination_directory(photo_index)
+    if not os.path.isfile(SOURCE_DIRECTORY + photo_file_name):
+      copyfile(SOURCE_DIRECTORY + photo_file_name, path + photo_file_name)
+    with open(path + 'list-regression.txt', 'a') as destination_list_file:
+      destination_list_file.write(' '.join([path + photo_id + '.jpg', str(photo_label)]) + '\n')
     progress_bar.update()
 
   print('Copied ' + str(len(photos_list)) + ' photos.')

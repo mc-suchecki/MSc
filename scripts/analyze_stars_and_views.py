@@ -1,7 +1,7 @@
 """Displays a histogram for photos metadata - number of stars and views."""
 import datetime
 from math import log
-import matplotlib.pyplot as pyplot
+from matplotlib import pylab
 import numpy
 import pyprind
 import sys
@@ -17,10 +17,12 @@ DESIRED_HEIGHT = 159
 def is_photo_resolution_wrong(photo_metadata: list):
   width = int(photo_metadata[3])
   height = int(photo_metadata[4])
-  return width != DESIRED_WIDTH or height != DESIRED_HEIGHT
+  # return width != DESIRED_WIDTH or height != DESIRED_HEIGHT
+  return False
 
 
 # init
+pylab.style.use('ggplot')
 stars_list = []
 stars_log_list = []
 views_list = []
@@ -98,7 +100,7 @@ print('90% photos have score of less than {}.'.format(numpy.percentile(stars_vie
 print('95% photos have score of less than {}.'.format(numpy.percentile(stars_views_log_ratio_list, 95)))
 
 # plot the data using histograms
-fig, axes = pyplot.subplots(nrows=2, ncols=3, sharex=False, sharey=False)
+fig, axes = pylab.subplots(nrows=2, ncols=3, sharex=False, sharey=False)
 fig.suptitle('Statistics for {} photos with {} views threshold'.format(number_of_selected_photos, VIEWS_THRESHOLD))
 axes[0][0].set_ylabel('Number of photos')
 axes[0][1].set_ylabel('Number of photos')
@@ -122,4 +124,4 @@ axes[0][2].set_xlabel('Ratio of stars to views per photo')
 axes[1][2].hist(stars_views_log_ratio_list, bins=NUMBER_OF_BINS)
 axes[1][2].set_xlabel('Logarithm of ratio of stars to views per photo')
 
-pyplot.show()
+pylab.show()

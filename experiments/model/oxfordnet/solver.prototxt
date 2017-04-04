@@ -9,6 +9,6 @@ display: 20
 max_iter: 4500000
 momentum: 0.9
 weight_decay: 0.001
-snapshot: 50000
+snapshot: 500000
 snapshot_prefix: "./results/oxfordnet_model"
 solver_mode: GPU

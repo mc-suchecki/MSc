@@ -41,8 +41,8 @@ def main(files):
     test_set_loss, = first_axis.plot(test_iterations, test_losses, 'b', label='Test set loss')
     test_set_accuracy, = second_axis.plot(test_iterations, accuracies, 'r', label='Test set accuracy')
     pylab.legend(handles=[training_set_loss, test_set_loss, test_set_accuracy], loc='upper left', prop={'size': 6})
-    first_axis.set_ylim([0, 2.5])
-    second_axis.set_ylim([50, 75])
+    first_axis.set_ylim([0, 3.5])
+    second_axis.set_ylim([60, 74])
     first_axis.set_xlim([0, 150000])
 
   pylab.show()
@@ -95,12 +95,14 @@ def parse_log(filename):
   momentum = re.findall(r"momentum: (.*)", log)[0]
   weight_decay = re.findall(r"weight_decay: (.*)", log)[0]
   dropout_ratio = re.findall(r"dropout_ratio: (.*)", log)
+  if len(dropout_ratio) == 0:
+    dropout_ratio = ['0', '0']
   title = 'Date: ' + filename.split('/')[-1].split('_')[0] + ', activations: ' + activation_function \
-      + ', best accuracy: ' + str(numpy.max(accuracies)) + '.\n' \
-      + 'Base LR: ' + base_learning_rate + ', LR mult. for conv. layers: ' + learning_rate_multiplier \
-      + ', momentum: ' + momentum + '.\n' \
-      + 'Weight decay: ' + weight_decay \
-      + ', dropout ratios: ' + dropout_ratio[0] + ' (FC6 layer) / ' + dropout_ratio[1] + ' (FC7 layer).'
+          + ', best accuracy: ' + str(numpy.max(accuracies)) + '.\n' \
+          + 'Base LR: ' + base_learning_rate + ', LR mult. for conv. layers: ' + learning_rate_multiplier \
+          + ', momentum: ' + momentum + '.\n' \
+          + 'Weight decay: ' + weight_decay \
+          + ', dropout ratios: ' + dropout_ratio[0] + ' (FC6 layer) / ' + dropout_ratio[1] + ' (FC7 layer).'
 
   return training_iterations, training_losses, test_iterations, accuracies, test_losses, title
 
