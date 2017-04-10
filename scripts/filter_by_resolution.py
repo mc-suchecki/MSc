@@ -92,7 +92,7 @@ with open(PHOTOS_LIST_FILE) as photos_list_file:
     bad_photos += 0 if photo_label == 1 else 1
     photo_file_name = photo_id + '.jpg'
     path = get_destination_directory(photo_index)
-    if not os.path.isfile(SOURCE_DIRECTORY + photo_file_name):
+    if not os.path.isfile(path + photo_file_name):
       copyfile(SOURCE_DIRECTORY + photo_file_name, path + photo_file_name)
     with open(path + 'list-regression.txt', 'a') as destination_list_file:
       destination_list_file.write(' '.join([path + photo_id + '.jpg', str(photo_label)]) + '\n')
