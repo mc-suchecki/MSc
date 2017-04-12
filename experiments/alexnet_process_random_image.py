@@ -9,20 +9,21 @@ sys.path.insert(0, CAFFE_ROOT + 'python/')
 import caffe
 
 # settings
-PHOTOS_LOCATION = '../data/train/'
+PHOTOS_LOCATION = '/media/p307k07/ssd/opt/msc/data/test/'
 PHOTOS_LIST_LOCATION = PHOTOS_LOCATION + 'list.txt'
 MEAN_FILE_LOCATION = PHOTOS_LOCATION + 'mean.npy'
 
-if os.path.isfile(CAFFE_ROOT + 'models/bvlc_reference_caffenet/bvlc_reference_caffenet.caffemodel'):
+if os.path.isfile('./results/alexnet_model_iter_450000.caffemodel'):
   print('Caffe model found.')
 else:
   print('Caffe model not found.')
+  quit()
 
 caffe.set_device(0)
 caffe.set_mode_gpu()
 
-model_def = CAFFE_ROOT + 'models/bvlc_reference_caffenet/deploy.prototxt'
-model_weights = CAFFE_ROOT + 'models/bvlc_reference_caffenet/bvlc_reference_caffenet.caffemodel'
+model_def = CAFFE_ROOT + 'model/alexnet/deploy.prototxt'
+model_weights = './results/alexnet_model_iter_450000.caffemodel'
 
 net = caffe.Net(model_def,  # defines the structure of the model
                 model_weights,  # contains the trained weights
@@ -42,9 +43,9 @@ transformer.set_raw_scale('data', 255)  # rescale from [0, 1] to [0, 255]
 transformer.set_channel_swap('data', (2, 1, 0))  # swap channels from RGB to BGR
 
 # set the size of the input
-net.blobs['data'].reshape(50,  # batch size
+net.blobs['data'].reshape(1,  # batch size
                           3,  # 3-channel (BGR) images
-                          227, 227)  # image size is 240x180
+                          240, 159)  # image size is 240x159
 
 # load the image
 print('Getting a random photo from dataset...')
@@ -63,14 +64,8 @@ output = net.forward()
 
 # interpret the output
 output_prob = output['prob'][0]  # the output probability vector for the first image in the batch
-print('Predicted class is:', output_prob.argmax())
-labels_file = CAFFE_ROOT + 'data/ilsvrc12/synset_words.txt'  # load ImageNet labels
-labels = numpy.loadtxt(labels_file, str, delimiter='\t')
-print('Output label:', labels[output_prob.argmax()])
-top_inds = output_prob.argsort()[::-1][:5]  # reverse sort and take five largest items
-print('Probabilities and labels:')
-print(list(zip(output_prob[top_inds], labels[top_inds])))
+print('AlexNet output for {} : {}'.format(random_photo_location, output_prob))
 
 # show the image
-matplotlib.pyplot.imshow(image)
-matplotlib.pyplot.show()
+# matplotlib.pyplot.imshow(image)
+# matplotlib.pyplot.show()
