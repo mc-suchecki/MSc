@@ -11,7 +11,7 @@ layer {
   }
   image_data_param {
     source: "/home/msucheck/data/train/list_caffe.txt"
-    batch_size: 8
+    batch_size: 32
     new_height: 159
     new_width: 240
   }
@@ -2592,21 +2592,21 @@ layer {
     type: "ReLU"
 }
 
-# layer {
-    # bottom: "res5c"
-    # top: "pool5"
-    # name: "pool5"
-    # type: "Pooling"
-    # pooling_param {
+layer {
+    bottom: "res5c"
+    top: "pool5"
+    name: "pool5"
+    type: "Pooling"
+    pooling_param {
         # kernel_size: 7
-        # stride: 1
-        # pool: AVE
-    # }
-# }
+        kernel_size: 5
+        stride: 1
+        pool: AVE
+    }
+}
 
 layer {
-    # bottom: "pool5"
-    bottom: "res5c"
+    bottom: "pool5"
     top: "fc2"
     name: "fc2"
     type: "InnerProduct"
