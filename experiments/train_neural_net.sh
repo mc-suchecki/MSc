@@ -27,5 +27,5 @@ log_file_name+="_log.txt"
 
 
 # ResNet-50 fine-tuning
-# ../../caffe/build/tools/caffe train -solver ./model/resnet-50/solver.prototxt -weights ./model/resnet-50/model.caffemodel &> $log_file_name
+../../caffe/build/tools/caffe train -solver ./model/resnet-50/solver.prototxt -weights ./model/resnet-50/model.caffemodel &> $log_file_name
 
