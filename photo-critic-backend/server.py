@@ -2,6 +2,7 @@ import io
 import os
 import sys
 import zmq
+import numpy
 import logging
 
 from PIL import Image
@@ -12,11 +13,15 @@ MODEL_DEFINITION_LOCATION = '../experiments/model/alexnet/deploy.prototxt'
 MEAN_VALUE_BLUE = 296
 MEAN_VALUE_GREEN = 103
 MEAN_VALUE_RED = 108
+MEAN_ARRAY = numpy.array([MEAN_VALUE_RED, MEAN_VALUE_GREEN, MEAN_VALUE_BLUE])
 
 # configure logging
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-logger.addHandler(logging.StreamHandler(sys.stdout))
+handler = logging.StreamHandler(sys.stdout)
+formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 
 # checks
@@ -34,24 +39,25 @@ check_file(MODEL_DEFINITION_LOCATION, 'Caffe model definition')
 # does inference in Caffe and returns the photo score
 def get_photo_score(photo):
   if photo.size[0] < photo.size[1]:
-    logging.info("Image is vertical - rotating to horizontal...")
+    logger.info("Image is vertical - rotating to horizontal...")
     photo = photo.rotate(90)
 
-  logging.info("Resizing the image to 240x159 pixels...")
+  logger.info("Resizing the image to 240x159 pixels...")
   photo.resize((240, 159), 3)
 
-  logging.info("Loading image to Caffe...")
+  logger.info("Loading image to Caffe...")
   photo.save("./temp.jpg")
   photo = caffe.io.load_image("./temp.jpg")
   os.remove("./temp.jpg")
   transformed_image = transformer.preprocess('data', photo)
   net.blobs['data'].data[...] = transformed_image
 
-  logging.info("Doing the forward propagation...")
+  logger.info("Doing the forward propagation...")
   output = net.forward()
 
-  score = output['prob'][0]  # the output probability vector for the first image in the batch
-  logging.info("Done. Photo score is {}%.".format(score))
+  score = output['prob'][0][1]  # output, first image, second neuron
+  score = float(score) * 100
+  logger.info("Done. Photo score is {}%.".format(score))
   return score
 
 
@@ -64,7 +70,7 @@ caffe.set_mode_gpu()
 net = caffe.Net(MODEL_DEFINITION_LOCATION, MODEL_WEIGHTS_LOCATION, caffe.TEST)
 transformer = caffe.io.Transformer({'data': net.blobs['data'].data.shape})
 transformer.set_transpose('data', (2, 0, 1))  # move image channels to outermost dimension
-transformer.set_mean('data', [MEAN_VALUE_RED, MEAN_VALUE_GREEN, MEAN_VALUE_BLUE])  # subtract the mean
+transformer.set_mean('data', MEAN_ARRAY)  # subtract the mean
 transformer.set_raw_scale('data', 255)  # rescale from [0, 255] to [0, 1]
 transformer.set_channel_swap('data', (2, 1, 0))  # swap channels from RGB to BGR
 net.blobs['data'].reshape(1,  # batch size
@@ -86,6 +92,5 @@ while True:
   stream = io.BytesIO(data)
   image = Image.open(stream)
   logger.info("Photo resolution is {}x{} pixels.".format(image.size[0], image.size[1]))
-  logger.info("Starting inference using AlexNet...")
   score = get_photo_score(image)
   socket.send_json({"score": score})
