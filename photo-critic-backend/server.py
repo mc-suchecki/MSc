@@ -40,10 +40,13 @@ check_file(MODEL_DEFINITION_LOCATION, 'Caffe model definition')
 def get_photo_score(photo):
   if photo.size[0] < photo.size[1]:
     logger.info("Image is vertical - rotating to horizontal...")
-    photo = photo.rotate(90)
+    try:
+      photo = photo.rotate(90)
+    except OSError as error:
+      logger.error(error.strerror)
 
   logger.info("Resizing the image to 240x159 pixels...")
-  photo.resize((240, 159), 3)
+  photo = photo.resize((240, 159), 3)
 
   logger.info("Loading image to Caffe...")
   photo.save("./temp.jpg")
@@ -56,7 +59,7 @@ def get_photo_score(photo):
   output = net.forward()
 
   score = output['prob'][0][1]  # output, first image, second neuron
-  score = float(score) * 100
+  score = round(float(score) * 100, 2)
   logger.info("Done. Photo score is {}%.".format(score))
   return score
 
@@ -78,10 +81,11 @@ net.blobs['data'].reshape(1,  # batch size
                           240, 159)  # image size is 240x159
 
 # create context and specify the port
+port = 6666
 context = zmq.Context()
-logger.info("Creating the socket using port 6666...")
+logger.info("Creating the socket using port {}...".format(port))
 socket = context.socket(zmq.REP)
-socket.bind("tcp://*:6666")
+socket.bind("tcp://*:{}".format(port))
 logger.info("Socket successfully created!")
 logger.info("Waiting for requests...")
 

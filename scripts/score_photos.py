@@ -1,6 +1,6 @@
 import os
 import sys
-
+import numpy
 import pyprind
 
 # settings
@@ -33,7 +33,7 @@ def get_photo_score(photo_path):
   transformed_image = transformer.preprocess('data', photo)
   net.blobs['data'].data[...] = transformed_image
   output = net.forward()
-  score = output['prob'][0]  # the output probability vector for the first image in the batch
+  score = output['prob'][0][1]  # last layer, second neuron
   return score
 
 
@@ -47,7 +47,7 @@ caffe.set_mode_gpu()
 net = caffe.Net(MODEL_DEFINITION_LOCATION, MODEL_WEIGHTS_LOCATION, caffe.TEST)
 transformer = caffe.io.Transformer({'data': net.blobs['data'].data.shape})
 transformer.set_transpose('data', (2, 0, 1))  # move image channels to outermost dimension
-transformer.set_mean('data', [MEAN_VALUE_RED, MEAN_VALUE_GREEN, MEAN_VALUE_BLUE])  # subtract the mean
+transformer.set_mean('data', numpy.array([MEAN_VALUE_RED, MEAN_VALUE_GREEN, MEAN_VALUE_BLUE]))  # subtract the mean
 transformer.set_raw_scale('data', 255)  # rescale from [0, 255] to [0, 1]
 transformer.set_channel_swap('data', (2, 1, 0))  # swap channels from RGB to BGR
 net.blobs['data'].reshape(1,  # batch size

@@ -21,9 +21,9 @@ with open(PHOTOS_LIST_FILE) as photos_list_file:
   worst_photos_list = []
 
   for line in photos_list:
-    photo_metadata_list = line.split(',')
+    photo_metadata_list = line.split(' ')
     photo_id = str(photo_metadata_list[0])
-    photo_score = int(photo_metadata_list[1])
+    photo_score = float(photo_metadata_list[1])
 
     best_photos_list.append((photo_id, photo_score))
     worst_photos_list.append((photo_id, photo_score))

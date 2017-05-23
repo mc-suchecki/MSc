@@ -1,3 +1,3 @@
 #!/bin/bash
 
-python3 ./server.py >> server.log
+python3 ./server.py &>> server.log
