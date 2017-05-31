@@ -8,8 +8,8 @@ from sklearn.externals import joblib
 # settings
 TRAIN_DATA_LOCATION = '../data/train/'
 TEST_DATA_LOCATION = '../data/test/'
-EXAMPLES_FILE_NAME = 'X_fc6_no_relu_first_256000.npy'
-LABELS_FILE_NAME = 'y_fc6_no_relu_first_256000.npy'
+EXAMPLES_FILE_NAME = 'X_fc6_no_relu_first_65536.npy'
+LABELS_FILE_NAME = 'y_fc6_no_relu_first_65536.npy'
 
 if __name__ == '__main__':
   # loading the dataset
@@ -36,13 +36,6 @@ if __name__ == '__main__':
   print('Model saved to {}.'.format(model_file_name))
 
   # results
-  print('Grid scores on the training set:')
-  print()
-  means = classifier.cv_results_['mean_test_score']
-  stds = classifier.cv_results_['std_test_score']
-  for mean, std, params in zip(means, stds, classifier.cv_results_['params']):
-    print('%0.3f (+/-%0.03f) for %r' % (mean, std * 2, params))
-  print()
   predictions = classifier.predict(X_test)
   print('Classification report on the test set:')
   print(classification_report(y_test, predictions))
